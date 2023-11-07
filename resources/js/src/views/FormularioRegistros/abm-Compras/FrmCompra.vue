@@ -304,6 +304,9 @@ export default {
         this.cbxArticulo()
         this.cbxFormaPago()
         this.cbxProveedor()
+        if (this.$store.state.app.TipoAccion === "editar" || this.$store.state.app.TipoAccion === "ver") {
+            this.GetShoppingById()
+        }
     },
     computed: {
         totalPagarCalculado() {
@@ -450,7 +453,40 @@ export default {
             me.montoRecibido = 0
             me.cambio = 0
         },
+        GetShoppingById() {
+            let me = this;
+            const axios = require("axios").default;
+            // alert(this.$store.state.app.idUtilitario)
+            let parametros = '?cmtId='+this.$store.state.app.idUtilitario
+            me.items = [];
 
+            var url = "api/auth/GetShoppingById";
+            me.loaded = false;
+            me.itemsAgregado=[];
+            axios.get(url+parametros).then(function (response) {
+                    var resp = response.data.data;
+                    me.txtId = resp.cmtId;
+                    me.txtUserId = resp.userId;
+                    me.selectedProveedor = { id: resp.provId, title: resp.provNombre, };
+                    me.txtNumero = resp.cmtNumero;
+                    me.txtFechaCompra = resp.cmtFechaCompra;
+                    var detalle = response.data.detalle;
+                    
+                    for (let i = 0; i < detalle.length; i++) {
+                        me.itemsAgregado.push({
+                            id: detalle[i].artid, 
+                            title: detalle[i].artNombre, 
+                            cantidad: detalle[i].cmdCantidad, 
+                            precioC: detalle[i].cmdCosto, 
+                            subtotal: (detalle[i].cmdCantidad*detalle[i].cmdCosto)
+                        });
+                    }
+                    me.loaded = true;
+                })
+                .catch((e) => {
+                    alert("error al obtener los datos de Compra " + e);
+                });
+        },
         GurdarMovimientoCaja() {
             const me = this;
             const axios = require("axios").default;

@@ -275,10 +275,10 @@ export default {
             }
             if (accion === "editar") {
 
-                this.$store.dispatch('app/cambiaId', item["artId"])
+                this.$store.dispatch('app/cambiaId', item["cmtId"])
                 this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'primary', icono: 'SaveIcon', texto: 'Modificar', Bclass: '' })
 
-                this.$refs["frm-articulo"].show();
+                this.$refs["frm-compra"].show();
             }
             if (accion === "ver") {
                 this.$store.dispatch('app/cambiaId', item["artId"])

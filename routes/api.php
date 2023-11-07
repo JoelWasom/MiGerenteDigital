@@ -83,6 +83,8 @@ Route::group(['prefix' => 'auth'], function () {
   // COMPRAS
   Route::get('GetAllShopping', [cmtxnController::class, 'GetAllShopping']);
   Route::post('addShopping', [cmtxnController::class, 'addShopping']);
+  Route::post('UpdateShopping', [cmtxnController::class, 'UpdateShopping']);
+  Route::get('GetShoppingById', [cmtxnController::class, 'GetShoppingById']);
 
   //  cajCaja
   Route::get('ListadoCaja', [cjCajaController::class, 'ListadoCaja']);
