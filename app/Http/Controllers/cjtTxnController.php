@@ -57,9 +57,9 @@ class CjtTxnController extends Controller
                 'cjtFechaCreacion' => now(),
             ]);
 
-
-            $bitacoraController->insertarBitacora($tabla,$cjtId , $datosValidados['userId'], 'Moviento en caja', 'Ingreso po Venta con Codigo de Referencia:'.$datosValidados['cjtReferencia']);
-
+            echo "/*inicio en bitacora*/";
+            $bitacoraController->insertarBitacora($tabla,$cjtId , $datosValidados['userId'], 'Moviento en caja', 'Codigo de Referencia:'.$datosValidados['cjtReferencia']);
+            echo "/*inserto en bitacora*/";
             // Retornar una respuesta de éxito
             DB::commit();
             return response()->json(['mensaje' => 'Movimiento de caja registrado exitosamente'], 201);
@@ -67,6 +67,26 @@ class CjtTxnController extends Controller
             // Manejo de la excepción
             DB::rollBack();
             return response()->json(['error' => 'Error al registrar el movimiento de caja: ' . $e->getMessage()], 500);
+        }
+    }
+    public function AnularMovimientoCaja($Referncia, $UsuarioId)
+    {
+        $obj_bitacora = new bitacoraController();
+        $UsuarioId = $UsuarioId;
+        DB::beginTransaction();
+        try {
+            $tabla = 'cjtTxn';
+            DB::table($tabla)
+                ->where('cjtReferencia', $Referncia)
+                ->update([
+                    'cjtActivo' => 0,
+                ]);
+            $obj_bitacora->insertarBitacora($tabla, $Referncia, $UsuarioId, 'ANULACION', 'Se anula el registro para evitar descuadre de caja');
+            DB::commit();
+            return response()->json(['Mensaje' => 'Operación Realizado con Éxito'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['Mensaje' => 'No se Logró Realizar la Operación: ' . $e->getMessage()], 409);
         }
     }
 }

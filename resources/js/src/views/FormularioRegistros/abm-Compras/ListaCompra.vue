@@ -4,7 +4,7 @@
         <div>
             <!-- Formulario Modal -->
             <b-modal ref="frm-compra" id="frm-compra" ok-title="Cerrar" ok-variant="danger" ok-only size="xl" centered
-                title="Registro de Compra" no-close-on-backdrop>
+                title="Registro de Compra" @ok="GetAllShopping">
                 <FrmCompra></FrmCompra>
             </b-modal>
         </div>
@@ -92,7 +92,6 @@
                                                         <feather-icon icon="TrashIcon" />
                                                     </b-button>
                                                 </b-col>
-
                                             </b-row>
 
                                         </template>
@@ -324,7 +323,7 @@ export default {
             this.boxTwo = "";
             this.$bvModal
                 .msgBoxConfirm(
-                    "El Articulo  " + " : " + item["artId"] + " Serán Eliminados",
+                    "El Registro seleccionado  " + " : " + item["cmtId"] + " Serán Eliminados",
                     {
                         title: "Advertencia",
                         size: "sm",
@@ -347,26 +346,21 @@ export default {
             let me = this;
             const axios = require("axios").default;
             const params = new URLSearchParams();
-            params.append('artId', item["artId"]);
-            var url = "api/auth/eliminarArticulo";
+            params.append('cmtId', item["cmtId"]);
+            var url = "api/auth/InactiveShopping";
             me.isBusy = true;
-            axios
-                .post(url, params)
-                .then(function (response) {
-
-                    if (response.status == 201) {
-                        me.UsuarioAlerta("success");
-                        // me.listArticulo()
-                        me.isBusy = false;
-                    } else {
-                        me.UsuarioAlerta("danger");
-                    }
-
-                })
-                .catch((e) => {
+            axios.post(url, params).then(function (response) {
+                if (response.status == 201) {
+                    me.UsuarioAlerta("success");
+                    me.GetAllShopping();
+                    me.isBusy = false;
+                } else {
                     me.UsuarioAlerta("danger");
-                    console.log("danger", "No se Realizó la Operación: " + e);
-                });
+                }
+            }).catch((e) => {
+                me.UsuarioAlerta("danger");
+                console.log("danger", "No se Realizó la Operación: " + e);
+            });
         },
         onFiltered(filteredItems) {
             // Trigger pagination to update the number of buttons/pages due to filtering

@@ -30,6 +30,7 @@ class cmtxnController extends Controller
                 DB::raw('SUM(cmdettxn.cmdCantidad * cmdettxn.cmdCosto) as totalCompras')
             )
             ->where('cmtxn.cmtActivo', 1)
+            ->where('cmdettxn.cmdActivo', 1)
             ->groupBy('cmtxn.cmtId', 'cmtxn.cmtNumero', 'gntproveedor.provNombre', 'gntproveedor.provTelefono','cmtxn.cmtFechaCreacion')
             ->orderBy('cmtNumero', 'desc')
             ->get();
@@ -70,7 +71,7 @@ class cmtxnController extends Controller
             return response()->json(['mensaje' => 'Error al obtener la Compra: ' . $ex->getMessage()], 500);
         }
     }
-    public function addShopping(Request $request)
+    public function AddShopping(Request $request)
     {
         DB::beginTransaction();
         try {
@@ -160,6 +161,7 @@ class cmtxnController extends Controller
             DB::commit();
             return response()->json(['mensaje' => 'Compra ' . $nuevoCmtNumero . ' registrada con éxito','cjtReferencia' => $nuevoCmtNumero], 201);
         } catch (\Exception $e) {
+            echo "/*$e->getMessage()*/";
             DB::rollBack();
             return response()->json(['error' => 'No se Logró realizar la operación de la Compra: ' . $e->getMessage()], 409);
         }
@@ -168,14 +170,14 @@ class cmtxnController extends Controller
     {
         DB::beginTransaction();
         try {
+            $cmtId = $request->cmtId;
             $provId = $request->provId;
             $userId = $request->userId;
             $cmtFechaCompra = $request->cmtFechaCompra;
-            $nuevoCmtNumero=$request->cmtNumero;
 
             // Obtener detalles de los productos comprados//
-            $detalleCompra = $request->detallesCompra;   //esto se descomenta para probar en postman
-            // $detalleCompra = json_decode($request->input('detallesCompra'), true);
+            // $detalleCompra = $request->detallesCompra;   //esto se descomenta para probar en postman
+            $detalleCompra = json_decode($request->input('detallesCompra'), true);
 
             // Objetos
             $obj_invTxn = new InvTxnController();
@@ -185,13 +187,13 @@ class cmtxnController extends Controller
             $obj_cjttxn = new cjtTxnController();
             $tablaCmtTxn = 'cmtxn';
             // Insertar datos en la tabla cmtxn usando el controlador CmtTxnController
-            $cmtId = DB::table($tablaCmtTxn)->where('cmtId', $request->cmtId)->update([
+            DB::table($tablaCmtTxn)->where('cmtId', $cmtId)->update([
                 'provId' => $provId,
                 'userId' => $userId,
                 'cmtFechaCompra' => $cmtFechaCompra
             ]);
             // Revertir la transaccion
-            $resultRollback= $this->rollbackCompras($request->cmtId);
+            $resultRollback= $this->RollbackCompras($cmtId,$userId);
 
             // Insertar detalles de los productos comprados en la tabla cmDetTxn usando el controlador cmDetTxnController
             foreach ($detalleCompra as $detalle) {
@@ -202,10 +204,11 @@ class cmtxnController extends Controller
             // Insertar movimiento en inventario usando el controlador InvTxnController
             $Modulo = "Compras";
             $invActivo = 1;
+            $nuevoCmtNumero = DB::table($tablaCmtTxn)->where('cmtId', $cmtId)->first();
             $obj_invTxn->guardarMovimiento(
                 now(),
-                $ttxnId,
-                $nuevoCmtNumero,
+                2,
+                $nuevoCmtNumero->cmtNumero,
                 $Modulo,
                 $userId,
                 $invActivo,
@@ -218,15 +221,36 @@ class cmtxnController extends Controller
                 $intArticuloController->aumentarCantidadArticulo($artId,$cmdCantidad);
             }
             // Registrar en la bitácora usando el controlador bitacoraController
-            $bitacoraController->insertarBitacora($tablaCmtTxn, $cmtId, $userId, 'Actualización de registro', 'Compra Modificada' . "-" . $nuevoCmtNumero);
+            $bitacoraController->insertarBitacora($tablaCmtTxn, $cmtId, $userId, 'Actualización de registro', 'Compra Modificada' . "-" . $nuevoCmtNumero->cmtNumero);
             DB::commit();
-            return response()->json(['mensaje' => 'Compra ' . $nuevoCmtNumero . ', Operación realizada exitosamente.','cjtReferencia' => $nuevoCmtNumero], 200);
+            return response()->json(['mensaje' => 'Compra ' . $nuevoCmtNumero->cmtNumero . ', Operación realizada exitosamente.','cjtReferencia' => $nuevoCmtNumero->cmtNumero], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => 'No se Logró realizar la operación de la Compra: ' . $e->getMessage()], 409);
         }
     }
-    public function rollbackCompras($cmtId)
+    public function InactiveShopping(Request $request)
+    {
+        $obj_bitacora = new bitacoraController();
+        $UsuarioId = 1;
+        DB::beginTransaction();
+        try {
+            $tabla = 'cmtxn';
+            DB::table($tabla)
+                ->where('cmtId', $request->cmtId)
+                ->update([
+                    'cmtActivo' => 0,
+                ]);
+            $obj_bitacora->insertarBitacora($tabla, $request->cmtId, $UsuarioId, 'ANULACION', 'Eliminación de Compras');
+            $resultRollback= $this->RollbackCompras($request->cmtId,$UsuarioId);
+            DB::commit();
+            return response()->json(['Mensaje' => 'Operaciòn Realizado con Éxito'], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['Mensaje' => 'No se Logró Realizar la Operación: ' . $e->getMessage()], 409);
+        }
+    }
+    public function RollbackCompras($cmtId,$userId)
     {
         $obj_invTxn = new InvTxnController();
         $cmDetTxnController = new cmDetTxnController();
@@ -240,8 +264,8 @@ class cmtxnController extends Controller
         /** 01.Obtenemos el detalle actual de compras para revertir la cantidad del stock en los articulos */
         $detalleCompra = DB::table('cmdettxn')->where('cmdtId',$cmtId)->where('cmdActivo',1)->get();
         foreach ($detalleCompra as $itemDetalle) {
-            $artId = $itemDetalle['artId'];
-            $Cantidad = $itemDetalle['cmdCantidad'];
+            $artId = $itemDetalle->artid;
+            $Cantidad = $itemDetalle->cmdCantidad;
             $intArticuloController->disminuirCantidadArticulo($artId, $Cantidad);
         }
 
@@ -250,11 +274,15 @@ class cmtxnController extends Controller
 
         /** 03. Obtenemos el Id del inventario de compras*/
         $invId = DB::table('invtxn')->where('invReferencia',$cmtNumero->cmtNumero)->where('invActivo',1)->first();
-        
+
         /** 03. Inactivamos el movimiento de inventario */
         DB::table('invtxn')->where('invId', $invId->invId)->update(['invActivo' => 0]);
 
         /** 04. Inactivamos el detalle de transacción */
-        DB::table('indettxn')->where('invId', $invId->invId)->update(['invActivo' => 0]);
+        DB::table('indettxn')->where('invId', $invId->invId)->update(['indActivo' => 0]);
+
+        /** 05. Anulamos el movimiento en CAJA */
+        
+        $obj_cjttxn->AnularMovimientoCaja($cmtNumero->cmtNumero, $userId);
     }
 }

@@ -5,7 +5,13 @@
                 <b-row>
                     <b-col>
                         <b-card border-variant="info">
-
+                            <b-row>
+                                <b-col sm="12" md="12" xl="12">
+                                    <b-form-group>
+                                        <b-form-text v-model="txtNumero"></b-form-text>
+                                    </b-form-group>
+                                </b-col>
+                            </b-row>
                             <b-row>
                                 <b-col sm="12" md="12" xl="12">
 
@@ -74,6 +80,7 @@
                                 </b-col>
                             </b-row> -->
                         </b-card>
+                        
                     </b-col>
                 </b-row>
             </b-col>
@@ -258,6 +265,9 @@ export default {
             selectedTipoCompra: null,
             totalPagar: 0, // Total a pagar
             montoRecibido:0,
+            txtId:null,
+            txtNumero: "",
+            txtUserId:"",
             txtFechaCompra: null,
             cjtReferencia: 0, // Monto recibido
             cambio: 0, // Cambio a entregar
@@ -509,7 +519,7 @@ export default {
                 me.AlertaMensaje("error", "Guardar Movimiento en Caja, Detalles: ",e.response.data.error);
             });
         },
-        Guardar() {
+        AddShopping() {
             const me = this;
             me.showOverlay = true;
             const hoy = new Date();
@@ -540,7 +550,7 @@ export default {
                 return me.AlertaMensaje("warning", "Debe agregar al menos un producto para realizar el registro de compra.")
             }
             formData.append("detallesCompra", JSON.stringify(detallesCompra));
-            axios.post("api/auth/addShopping", formData, {
+            axios.post("api/auth/AddShopping", formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             }).then(function (response) {
                 if (response.status === 201) {
@@ -554,6 +564,53 @@ export default {
             }).catch((e) => {
                 me.showOverlay = false;
                 me.AlertaMensaje("error", "Guardar Registro Compra, Detalles: ", e.response.data.error);
+            });
+        },
+        UpdateShopping() {
+            const me = this;
+            me.showOverlay = true;
+            const hoy = new Date();
+            const axios = require("axios").default;
+            const formData = new FormData();
+            // if (me.selectedProveedor === null || me.selectedTipoCompra === null || me.SelectedtipoPago === null) {
+            //     return me.AlertaMensaje("error", "Faltan Datos Para Ingresar")
+            // }
+            if (me.selectedProveedor === null) {
+                return me.AlertaMensaje("warning", "Faltan completar campos requeridos para el registro..")
+            }
+            if (me.txtFechaCompra === null) {
+                return me.AlertaMensaje("warning", "Faltan completar campos requeridos para el registro..")
+            }
+            formData.append("cmtId",this.$store.state.app.idUtilitario);
+            formData.append("provId", me.selectedProveedor.id); //  ID del Proveedor
+            formData.append("userId", this.$store.state.app.UsuarioId); // ID del usuario actual
+            formData.append("cmtFechaCompra",me.txtFechaCompra)
+            /**
+             * Se construye un array para el detalle de compras
+             */
+            const detallesCompra = this.itemsAgregado.map(item => ({
+                artId: item.id,
+                cmdCantidad: item.cantidad,
+                cmdCosto: item.precioC,
+                vndActivo: 1 
+            }));
+            if (detallesCompra.length <= 0) {
+                return me.AlertaMensaje("warning", "Debe agregar al menos un producto para realizar el registro de compra.")
+            }
+            formData.append("detallesCompra", JSON.stringify(detallesCompra));
+            axios.post("api/auth/UpdateShopping", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            }).then(function (response) {
+                if (response.status === 200) {
+                    me.showOverlay = false;
+                    me.cjtReferencia = response.data.cjtReferencia;
+                    me.AlertaMensaje("success", response.data.mensaje);
+                    me.isBusy = false;
+                    me.vaciarControles()
+                }
+            }).catch((e) => {
+                me.showOverlay = false;
+                me.AlertaMensaje("error", "Actualizar Registro Compra, Detalles: ", e.response.data.error);
             });
         },
         actualizarCantidad(item, nuevaCantidad) {
@@ -572,7 +629,6 @@ export default {
                 this.itemsAgregado.splice(index, 1);
                 this.montoRecibido = 0
                 this.cambio=0
-
             }
         },
         ControlaEliminar(item, index) {
@@ -597,14 +653,14 @@ export default {
             });
         },
 
-        //Realiza la Operacion Correspondiente
+        /** Realiza la Operacion Correspondiente */
         validaOperacion(accion) {
-            if (accion === "guardar") { this.Guardar() }
-            if (accion === "editar") { this.mofificar() }
+            if (accion === "guardar") { this.AddShopping() }
+            if (accion === "editar") { this.UpdateShopping() }
             if (accion === "ver") { alert("ajecutara el ver") }
-
         },
-        //Este evento elimina Articulo del Carrito
+
+        /** Este evento elimina Articulo del Carrito */
         clickAccion(item, index, accion) {
             if (accion === "eliminar") {
                 this.ControlaEliminar(item, index)
