@@ -28,7 +28,6 @@ class InvTxnController extends Controller
 
         DB::beginTransaction();
         try {
-
             $tablaInvTxn = 'invtxn';
             $invId = DB::table($tablaInvTxn)->insertGetId([
                 'invFechaMovimiento' => $invFechaMovimiento,
@@ -44,11 +43,15 @@ class InvTxnController extends Controller
             } else {
                 foreach ($detallesMovimiento as $detalle) {
                     $detalle['invId'] = $invId; // Asignar el invId al detalle para asociarlo al movimiento de inventario
-                    $InDetTxn =  $InDetTxnController->guardarDetalleTransaccion($detalle);
+                    if($ttxId == 1){
+                        $InDetTxn =  $InDetTxnController->guardarDetalleTransaccion($detalle);
+                    } else {
+                        $InDetTxn =  $InDetTxnController->guardarDetalleTransaccionCompras($detalle);
+                    }                    
                 }
                 $obj_bitacora->insertarBitacora($tablaInvTxn, $invId, $userId, 'Tipo Transaccion ID' . $ttxId, 'Movimiento en Inventario');
                 DB::commit();
-                return response()->json(['mensaje' => 'Movimiento registrado con éxito'], 201);
+                return response()->json(['mensaje' => 'Movimiento registrado con éxito', 'MensajeDetalleTxn'=>$InDetTxn], 201);
             }
         } catch (\Exception $e) {
             DB::rollBack();

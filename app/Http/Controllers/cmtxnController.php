@@ -96,29 +96,15 @@ class cmtxnController extends Controller
 
             // Obtener detalles de los productos comprados//
             // $detalleCompra = $request->detallesCompra;   //esto se descomenta para probar en postman
-            $detalleCompra = json_decode($request->input('detallesCompra'), true);
 
+            $detalleCompra = json_decode($request->input('detallesCompra'), true);
+        
             // Objetos
             $obj_invTxn = new InvTxnController();
             $cmDetTxnController = new cmDetTxnController();
             $bitacoraController = new bitacoraController();
             $intArticuloController = new intArticuloController();
             $obj_cjttxn = new cjtTxnController();
-            // Validar la cantidad disponible antes de guardar la venta
-            // foreach ($detalleCompra as $detalle) {
-            //     $artId = $detalle['artId'];
-            //     $vndCantidad = $detalle['cmdCantidad'];
-
-            //     // Obtener la cantidad actual del artículo
-            //     $articulo = DB::table('intarticulo')->where('artId', $artId)->first();
-
-            //     // if (!$articulo || $articulo->artCantidad < $vndCantidad) {
-            //     //     // No hay suficiente stock para el producto, realizar un rollback
-            //     //     DB::rollBack();
-            //     //     return response()->json(['mensaje' => 'No hay suficiente stock para el producto con ID ' . $artId], 400);
-            //     // }
-            // }
-
             $tablaCmtTxn = 'cmtxn';
             // Insertar datos en la tabla cmtxn usando el controlador CmtTxnController
             $cmtId = DB::table($tablaCmtTxn)->insertGetId([
@@ -139,7 +125,7 @@ class cmtxnController extends Controller
             // Insertar movimiento en inventario usando el controlador InvTxnController
             $Modulo = "Compras";
             $invActivo = 1;
-            $obj_invTxn->guardarMovimiento(
+            $respMovimiento = $obj_invTxn->guardarMovimiento(
                 now(),
                 $ttxnId,
                 $nuevoCmtNumero,
@@ -159,9 +145,8 @@ class cmtxnController extends Controller
             $bitacoraController->insertarBitacora($tablaCmtTxn, $cmtId, $userId, 'Creación de registro', 'Nueva Compra' . "-" . $nuevoCmtNumero);
 
             DB::commit();
-            return response()->json(['mensaje' => 'Compra ' . $nuevoCmtNumero . ' registrada con éxito','cjtReferencia' => $nuevoCmtNumero], 201);
+            return response()->json(['mensaje' => 'Compra ' . $nuevoCmtNumero . ' registrada con éxito','cjtReferencia' => $nuevoCmtNumero, 'MensajeMovimientoInv'=>$respMovimiento], 201);
         } catch (\Exception $e) {
-            echo "/*$e->getMessage()*/";
             DB::rollBack();
             return response()->json(['error' => 'No se Logró realizar la operación de la Compra: ' . $e->getMessage()], 409);
         }

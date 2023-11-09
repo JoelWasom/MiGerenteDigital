@@ -56,10 +56,7 @@ class CjtTxnController extends Controller
                 'cjtActivo' => 1,
                 'cjtFechaCreacion' => now(),
             ]);
-
-            echo "/*inicio en bitacora*/";
             $bitacoraController->insertarBitacora($tabla,$cjtId , $datosValidados['userId'], 'Moviento en caja', 'Codigo de Referencia:'.$datosValidados['cjtReferencia']);
-            echo "/*inserto en bitacora*/";
             // Retornar una respuesta de éxito
             DB::commit();
             return response()->json(['mensaje' => 'Movimiento de caja registrado exitosamente'], 201);

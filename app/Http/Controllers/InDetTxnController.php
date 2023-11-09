@@ -26,7 +26,28 @@ class InDetTxnController extends Controller
                 'indActivo' =>  $detalle['vndActivo'],
                 'indFechaCreacion' => now()
             ]);
+            DB::commit();
+            return response()->json(['Mensaje' => 'Detalle de transacción registrado con éxito'], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['Mensaje' => 'No se logró realizar la operación de creacion de detalle: ' . $e->getMessage()], 409);
+        }
+    }
+    public function guardarDetalleTransaccionCompras($detalle) {
 
+
+        DB::beginTransaction();
+        try {
+            // Insertar datos en la tabla inDetTxn
+            $tablaInDetTxn = 'inDetTxn';
+            DB::table($tablaInDetTxn)->insert([
+                'invId' => $detalle['invId'],
+                'artId' => $detalle['artId'],
+                'indCantidad' => $detalle['cmdCantidad'],
+                'indPrecio' =>  $detalle['cmdCosto'],
+                'indActivo' =>  $detalle['vndActivo'],
+                'indFechaCreacion' => now()
+            ]);
             DB::commit();
             return response()->json(['Mensaje' => 'Detalle de transacción registrado con éxito'], 201);
         } catch (\Exception $e) {
