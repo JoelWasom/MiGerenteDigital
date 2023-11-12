@@ -24,6 +24,15 @@ export default {
 
     // MigerenteDigital
 
+
+    //DATOS EMPRESA
+    NombreEmpresa :"",
+    DireccionEmpresa:"",
+    TelefonoEmpresa:"",
+    NitEmpresa:"",
+    LogoEmpresa:"",
+
+    //OTRAS ACCIONES
     TipoAccion: "guardar", // Accion de botones 
     classButton: "",//Oculta 
     variant: 'success',
@@ -94,6 +103,22 @@ export default {
     setExisteMonto(state,existe){
       state.ExisteMonto=existe
     },
+
+    setNombreEmpresa(state, NombreEmpresa) {
+      state.NombreEmpresa = NombreEmpresa;
+    },
+    setDireccionEmpresa(state, DireccionEmpresa) {
+      state.DireccionEmpresa = DireccionEmpresa;
+    },
+    setTelefonoEmpresa(state, TelefonoEmpresa) {
+      state.TelefonoEmpresa = TelefonoEmpresa;
+    },
+    setLogoEmpresa(state, LogoEmpresa) {
+      state.LogoEmpresa = LogoEmpresa;
+    },
+    setNitEmpresa(state, NitEmpresa) {
+      state.NitEmpresa = NitEmpresa;
+    },
   },
   actions: {
     // cambia el valor
@@ -122,6 +147,23 @@ export default {
     },
     cambiaExisteMonto({commit},existe){
       commit("setExisteMonto",existe)
-    }
+    },
+
+     cambiaNombreEmpresa({ commit },NombreEmpresa) {
+      commit("setNombreEmpresa", NombreEmpresa);
+    },
+
+    cambiaDireccionEmpresa({ commit },DireccionEmpresa) {
+      commit("setDireccionEmpresa", DireccionEmpresa);
+    },
+    cambiaTelefonoEmpresa({ commit },TelefonoEmpresa) {
+      commit("setTelefonoEmpresa", TelefonoEmpresa);
+    },
+    cambiaLogoEmpresa({ commit },LogoEmpresa) {
+      commit("setLogoEmpresa", LogoEmpresa);
+    },
+    cambiaNitEmpresa({ commit },NitEmpresa) {
+      commit("setNitEmpresa", NitEmpresa);
+    },
   },
 }

@@ -73,7 +73,7 @@ return [
 
 
     //zona horaria para el sistema
-    // 'timezone' => 'America/La_Paz',
+    'timezone' => 'America/La_Paz',
 
     /*
     |--------------------------------------------------------------------------

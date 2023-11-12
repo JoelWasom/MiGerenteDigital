@@ -6,12 +6,15 @@
             <b-modal ref="frm-ventas" id="frm-ventas" ok-title="Cerrar" ok-variant="danger" ok-only size="xl" centered
                 title="Registro de Venta" no-close-on-backdrop @ok="obtenerVentasRealizadas">
                 <!-- Diseño del Formulario -->
-                <Frm_Venta ></Frm_Venta>
+                <Frm_Venta></Frm_Venta>
             </b-modal>
             <b-modal ref="frm-nota" id="frm-nota" ok-title="Cerrar" ok-variant="danger" ok-only size="xl" centered
                 title="Registro de Venta" no-close-on-backdrop @ok="obtenerVentasRealizadas">
                 <!-- Diseño del Formulario -->
-              <frm-nota-venta></frm-nota-venta>
+                <div>
+                    <frm-nota-venta></frm-nota-venta>
+                </div>
+
             </b-modal>
         </div>
         <b-row>
@@ -42,11 +45,13 @@
                                         :class="{ 'd-none': $store.state.app.isCrea }">
                                         Nuevo Registro
                                     </b-button>
-                                    <b-button v-ripple.400="'rgba(113, 102, 240, 0.15)'" v-b-modal.frm-nota
-                                       >
-                                        Reportes
+                                    <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'" :variant="$store.state.app.variant"
+                                        :class="$store.state.app.classButton"
+                                        @click="CierreCaja()">
+                                        <feather-icon :icon="$store.state.app.botonIcono" class="mr-50" />
+                                        <span class="align-middle">Cerrar Caja </span>
                                     </b-button>
-                                
+
                                 </b-col>
                                 <b-col sm="8" md="7" xl="6" lg="6">
                                     <b-form-group label-for="filter-input">
@@ -173,6 +178,7 @@ import {
     BFormValidFeedback,
     BFormInvalidFeedback,
 } from "bootstrap-vue";
+// import Ripple from "vue-ripple-directive";
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
 import Frm_Venta from "./frm_Venta.vue";
@@ -223,7 +229,7 @@ export default {
     },
     directive: {
         "b-tooltip": VBTooltip,
-        Ripple,
+        Ripple
     },
     data() {
         return {
@@ -281,6 +287,7 @@ export default {
     mounted() {
         this.VerificarAperturaCaja()
         this.obtenerVentasRealizadas()
+        this.clickAccion('', "apertura")
     },
     methods: {
 
@@ -288,7 +295,9 @@ export default {
         clickAccion(item, accion) {
 
 
-
+            if (accion === "apertura") {
+                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'success', icono: 'SaveIcon', texto: 'Apertura Caja', Bclass: '' })
+            }
             if (accion === "guardar") {
                 this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'success', icono: 'SaveIcon', texto: 'Guardar', Bclass: '' })
             }
@@ -310,43 +319,43 @@ export default {
             }
         },
         UsuarioAlerta(variant, msj) {
+            let title, confirmButtonClass, showClass;
 
             if (variant === "success") {
-                this.$swal({
-                    title: "Buen Trabajo",
-                    text: msj,
-                    icon: variant,
-                    customClass: {
-                        confirmButton: "btn btn-success",
-                    },
-                    showClass: {
-                        popup: "animate__animated animate__bounceIn",
-                    },
-                    buttonsStyling: true,
-                });
+                title = "Buen Trabajo";
+                confirmButtonClass = "btn btn-success";
+                showClass = "animate__animated animate__bounceIn";
+            } else if (variant === "error") {
+                title = "¡Error!";
+                confirmButtonClass = "btn btn-danger";
+                showClass = "btn btn-danger animate__animated animate__rubberBand";
+            } else if (variant === "warning") {
+                title = "Precaución";
+                confirmButtonClass = "btn btn-warning";
+                showClass = "animate__animated animate__wobble";
             } else {
-
-                this.$swal({
-                    title: "Precaución",
-                    text: msj,
-                    icon: variant,
-                    customClass: {
-
-                        icon: "animate__animated animate__flash",
-                        confirmButton: "btn btn-warning animate__animated animate__zoomIn",
-                    },
-                    showClass: {
-                        popup: "animate__animated  animate__fadeIn",
-                    },
-                    buttonsStyling: true,
-                });
+                // Puedes agregar más casos según tus necesidades.
             }
+
+            this.$swal({
+                title: title,
+                text: msj,
+                icon: variant,
+                customClass: {
+                    confirmButton: confirmButtonClass,
+                },
+                showClass: {
+                    confirmButton: showClass,
+                },
+                buttonsStyling: true,
+            });
         },
         ControlaEliminar(item) {
             this.boxTwo = "";
             this.$bvModal
                 .msgBoxConfirm(
-                    "El Articulo  " + " : " + item["artId"] + " Serán Eliminados",
+
+                    " La Venta con N°:" + item["vntNumero"] + " Con ID " + item["vntId"] + " Serán Eliminados",
                     {
                         title: "Advertencia",
                         size: "sm",
@@ -370,25 +379,28 @@ export default {
             let me = this;
             const axios = require("axios").default;
             const params = new URLSearchParams();
-            params.append('artId', item["artId"]);
-            var url = "api/auth/eliminarArticulo";
+            params.append('vntId', item["vntId"]);
+            params.append('userId', this.$store.state.app.UsuarioId);
+
+            var url = "api/auth/InactiveVenta";
             me.isBusy = true;
             axios
                 .post(url, params)
                 .then(function (response) {
 
                     if (response.status == 201) {
-                        me.UsuarioAlerta("success");
-                        // me.listArticulo()
+                        me.UsuarioAlerta("success", response.data.Mensaje);
+
                         me.isBusy = false;
+                        me.obtenerVentasRealizadas();
                     } else {
-                        me.UsuarioAlerta("danger");
+                        me.UsuarioAlerta("error", response.data.error);
                     }
 
                 })
                 .catch((e) => {
-                    me.UsuarioAlerta("danger");
-                    console.log("danger", "No se Realizó la Operación: " + e);
+                    me.UsuarioAlerta("error", e.response.data.error);
+                    console.log("danger", "No se Realizó la Operación: " + e.message);
                 });
         },
         onFiltered(filteredItems) {
@@ -397,7 +409,7 @@ export default {
         },
         limpiarVariables() {
             let me = this;
-            // me.listArticulo();
+
             me.shows = false;
             me.loaded = false;
             me.Loading = "";
@@ -501,7 +513,7 @@ export default {
         },
         VerificarAperturaCaja() {
             let me = this;
- 
+
 
             const axios = require("axios").default;
             const params = new URLSearchParams();
@@ -518,6 +530,34 @@ export default {
 
                     if (response.status === 201) {
                         me.UsuarioAlerta("warning", response.data.mensaje)
+                    }
+                    // me.items = lista;
+                    me.loaded = true;
+                })
+                .catch((e) => {
+                    me.UsuarioAlerta("error", e.response.data.error);
+                });
+        },
+        CierreCaja() {
+            let me = this;
+
+
+            const axios = require("axios").default;
+            const params = new URLSearchParams();
+            params.append('cajId', 1);
+            params.append('userId', this.$store.state.app.UsuarioId);
+            me.items = [];
+
+            var url = "api/auth/cerrarCaja";
+            me.loaded = false;
+            var lista = [];
+            axios
+                .post(url, params)
+                .then(function (response) {
+                    var resp = response.data;
+
+                    if (response.status === 201) {
+                        me.UsuarioAlerta("success", response.data.mensaje)
                     }
                     // me.items = lista;
                     me.loaded = true;
@@ -547,34 +587,5 @@ function MesActual(fecha, formato) {
 <style lang="scss" >
 @import '~@resources/scss/vue/libs/vue-select.scss';
 @import "~@resources/scss/base/pages/app-ecommerce-details.scss";
-
-.small-input {
-    font-size: 12px; // Ajusta el tamaño de la fuente según tus preferencias
-    padding: 0.25rem 0.5rem; // Ajusta el relleno (padding) según tus preferencias
-    height: 30px; // Ajusta la altura según tus preferencias
-    width: 80px;
-}
-.table-imprimir {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.table-imprimir th, .table-imprimir td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.table-imprimir th {
-  background-color: #f2f2f2;
-}
-
-.table-imprimir tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-.table-imprimir tr:hover {
-  background-color: #ddd;
-}
 </style>
         

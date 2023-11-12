@@ -211,7 +211,7 @@ import {
     BSpinner,
     BFormValidFeedback,
     BFormInvalidFeedback,
-    BIconNutFill,
+    
 } from "bootstrap-vue";
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'

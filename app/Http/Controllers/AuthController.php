@@ -338,4 +338,18 @@ class AuthController extends Controller
       return response()->json(['Mensaje' => 'error']);
     }
   }
+
+  public function DatosEmpresa()
+  {
+      try {
+          $empresa = DB::table('gntEMPRESA')
+              
+              ->get();
+
+          return response()->json($empresa,201);
+      } catch (\Exception $e) {
+          // return response()->json(['error' => 'Error al obtener los Datos de la Empresa: ' . $e->getMessage()], 500);
+          return response()->json(['error' => 'No se Logró realizar la operación de la Venta: ' . $e->getMessage()], 409);
+      }
+  }
 }

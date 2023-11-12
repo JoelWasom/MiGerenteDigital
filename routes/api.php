@@ -49,7 +49,7 @@ Route::group(['prefix' => 'auth'], function () {
   Route::post('PermisoOperacion', [AuthController::class, 'PermisoOperacion']);
 
   Route::post('Solicitapass', [AuthController::class, 'Solicitapass']);
-
+  Route::get('DatosEmpresa', [AuthController::class, 'DatosEmpresa']);
   //Lista Menus
   // ListaMenu
   Route::get('ListaRol', [MenuController::class, 'ListaRol']);
@@ -79,7 +79,8 @@ Route::group(['prefix' => 'auth'], function () {
   Route::get('obtenerVentasRealizadas', [vntTxnController::class, 'obtenerVentasRealizadas']);
   Route::post('guardarVenta', [vntTxnController::class, 'guardarVenta']);
   Route::get('ListaFormaPago', [vntTxnController::class, 'ListaFormaPago']);
-
+  Route::post('InactiveVenta', [vntTxnController::class, 'InactiveVenta']);
+  
   // COMPRAS
   Route::get('GetAllShopping', [cmtxnController::class, 'GetAllShopping']);
   Route::post('AddShopping', [cmtxnController::class, 'AddShopping']);

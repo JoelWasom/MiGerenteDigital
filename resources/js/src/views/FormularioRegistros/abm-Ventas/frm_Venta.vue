@@ -65,10 +65,7 @@
                                         <b-form-input v-model="cambio" class="montos" disabled></b-form-input>
                                     </b-form-group>
                                 </b-col>
-
                             </b-row>
-
-
                         </b-card>
                     </b-col>
 
@@ -118,8 +115,17 @@
                                                 :show="row.value === 0" :trigger="'hover focus'"
                                                 class="v-b-tooltip-dark text-center" />
                                         </template>
+
+                                        <template #cell(descuento)="row">
+                                            <b-form-input v-model="row.value" type="number" min="1"
+                                                @input="precioDescuento(row.item, row.value)" ref="descuentoInput"
+                                                :state="row.value > 0 ? true : false"
+                                                v-b-tooltip.hover.top.right="row.value > row.item.precioV ? 'Descuento No Valido' : 'Cantidad debe ser mayor que cero'"
+                                                :show="row.value === 0" :trigger="'hover focus'"
+                                                class="v-b-tooltip-dark text-center" />
+                                        </template>
                                         <template #cell(subtotal)="row">
-                                            {{ row.item.precioV * row.item.cantidad }}
+                                            {{ row.item.descuento > 0 ? row.item.descuento * row.item.cantidad :row.item.precioV * row.item.cantidad }}
                                         </template>
                                         <template #cell(Acción)="row">
 
@@ -151,7 +157,7 @@
                             <span class="align-middle">{{ $store.state.app.botonTexto }} </span>
                         </b-button>
                     </b-col>
-
+                    <button @click="generatePDF">Generar PDF</button>
                 </b-row>
             </b-col>
         </b-row>
@@ -200,6 +206,8 @@ import {
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 export default {
     components: {
         VBTooltip,
@@ -248,7 +256,7 @@ export default {
             tipoVenta: [{ id: "0", title: "CONTADO" }, { id: "1", title: "CREDITO" }],
             selectedTipoVenta: null,
             totalPagar: 0, // Total a pagar
-            montoRecibido:0,
+            montoRecibido: 0,
             cjtReferencia: 0, // Monto recibido
             cambio: 0, // Cambio a entregar
             vntNumero: "",
@@ -263,6 +271,7 @@ export default {
                 title: "",
                 icon: 'ListIcon',
                 precioV: 0,
+                descuento: 0,
                 cantidad: 0,
                 subtotal: 0
             },
@@ -272,6 +281,7 @@ export default {
                 { key: "id", label: "codigo", sortable: true, tdClass: "text-center text-bold" },
                 { key: "title", label: "PRODUCTO", sortable: true, tdClass: "text-left" },
                 { key: "precioV", label: "PRECIO", sortable: true, tdClass: "text-center text-bold" },
+                { key: "descuento", label: "DESCUENTO", sortable: true, tdClass: "text-center text-bold" },
                 { key: "cantidad", label: "CANTIDAD", sortable: false, tdClass: "text-center text-bold" },
                 { key: "subtotal", label: "SUBTOTAL", sortable: false, tdClass: "text-center text-bold" },
                 { key: "Acción", sortable: false, tdClass: "text-center" },
@@ -296,28 +306,132 @@ export default {
         this.cbxCliente()
     },
     computed: {
+
         totalPagarCalculado() {
             return this.itemsAgregado.reduce((total, item) => {
-                this.totalPagar = total + item.precioV * item.cantidad
+                if (item.descuento !== 0) {
+                    this.totalPagar = total + item.descuento * item.cantidad;
+                } else {
+                    this.totalPagar = total + item.precioV * item.cantidad;
+                }
                 this.montoRecibido = 0;
                 this.cambio = 0;
                 return this.totalPagar;
             }, 0);
-
         },
     },
-    methods: {
-        // imprimirTabla() {
-        //     printJS({
-        //         printable: 'frm-articulo',
-        //         type: 'html',
-        //         importCSS: true,  // Importar estilos CSS
-        //         printContainer: false,
+    methods:
+    {
 
-        //     });
-        //   window.print();
-        // },
-        // Alertas 
+
+        generatePDF(Articulo) {
+            try {
+                // Crear un nuevo documento PDF
+                const doc = new jsPDF();
+                let me = this;
+
+                // Agregar el logo de la empresa (reemplaza 'ruta_al_logo' con la ruta de tu imagen)
+                const image = new Image();
+                var imgData = 'data:image/png;base64,' + me.$store.state.app.LogoEmpresa;
+                doc.addImage(imgData, 'PNG', 15, 5, 25, 25);
+                doc.setFont('helvetica', 'neue')
+                doc.setFontSize(8);
+                // doc.text(me.$store.state.app.NombreEmpresa, 40, 20);
+                doc.text('DIRECCION : ' + me.$store.state.app.DireccionEmpresa, 40, 20);
+                doc.text('TELEFONO  : ' + me.$store.state.app.TelefonoEmpresa, 40, 25);
+                doc.text('Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
+                const currentDate = new Date(); // Obtiene la fecha actual
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                const formattedDate = currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
+
+                // Configuración de la nota de venta
+                const notaDeVenta = {
+                    numero: me.cjtReferencia,
+                    fecha: formattedDate,
+                    cliente: me.selectedCliente.title,
+                    direccion: '123 Calle Principal',
+                    ciudad: 'Ciudad Ejemplo',
+                };
+
+
+                // Datos de los productos
+                const columns = ['Articulo', 'Cantidad', 'PrecioUnitario', 'Descuento', 'SubTotal'];
+                const rows = Articulo.map((producto) => {
+                    const precioOriginal = parseFloat(producto.precioV);
+                    const precioUnitario = producto.descuento ? parseFloat(producto.descuento) : precioOriginal;
+                    const subtotal = precioUnitario * parseInt(producto.cantidad);
+
+                    return [
+                        producto.title || '',
+                        producto.cantidad || 0,
+                        precioOriginal.toFixed(2), // Mostrar el precio original en la columna 'Precio'
+                        producto.descuento || 0,
+                        subtotal.toFixed(2),
+                    ];
+                });
+
+                // Agregar el encabezado de la nota de venta
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'neue');
+                doc.text('Nota de Venta', 135, 10);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'neue');
+
+                doc.text('N°:', 135, 20);
+                // doc.setTextColor(110, 107, 123);
+                doc.text(`${notaDeVenta.numero}`, 145, 20);
+                doc.setTextColor(0);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`Fecha: ${notaDeVenta.fecha}`, 135, 28);
+                doc.setFont('helvetica', 'neue');
+                // doc.setTextColor(0);
+                doc.text("Cliente:", 15, 52);
+                // doc.setTextColor(100);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`${notaDeVenta.cliente}`, 35, 52);
+                const columnStyles = {
+                    0: { halign: 'text-left' }, // Alineación centrada para la primera columna
+                    1: { halign: 'center' }, // Alineación centrada para la segunda columna
+                    2: { halign: 'center' }, // Alineación centrada para la tercera columna
+                    3: { halign: 'center' }, // Alineación centrada para la cuarta columna
+                    4: { halign: 'center' }, // Alineación centrada para la quinta columna
+                };
+                // Agregar la tabla de productos
+                doc.autoTable({
+                    startY: 60,
+                    head: [columns],
+                    body: rows,
+                    columnStyles: columnStyles,
+                });
+
+
+                // Calcular el total
+                // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
+                const total = Articulo.reduce((acc, producto) => {
+                    const precioUnitario = producto.descuento ? parseFloat(producto.descuento) : parseFloat(producto.precioV);
+                    const subtotal = precioUnitario * parseInt(producto.cantidad);
+                    return acc + subtotal;
+                }, 0);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`Total Bs.:`, 145, doc.autoTable.previous.finalY + 10);
+                doc.text(`${total.toFixed(2)}`, 175, doc.autoTable.previous.finalY + 10);
+
+                doc.setFont('times', 'normal');
+                doc.setFontSize(12);
+
+                // Guardar el documento PDF como un Data URI
+                const dataUri = doc.output('datauristring');
+
+                // Abrir el PDF en una nueva ventana o pestaña
+                const newWindow = window.open();
+                newWindow.document.write('<iframe width="100%" height="100%" src="' + dataUri + '"></iframe');
+            } catch (error) {
+                me.UsuarioAlerta("error", "Error al generar el PDF: " + error.message);
+            }
+        }
+        ,
+
+
         UsuarioAlerta(variant, msj) {
             let title, confirmButtonClass, showClass;
 
@@ -449,13 +563,14 @@ export default {
 
         },
         cargarProducto() {
+            
             if (this.selectedProductos) {
                 // Verificar si el producto ya está en la lista itemsAgregado
                 const productoExistente = this.itemsAgregado.find(item => item.id === this.selectedProductos.id);
 
                 if (!productoExistente) {
                     // Si el producto no existe en la lista, lo agregamos
-                    this.itemsAgregado.push({ ...this.selectedProductos, cantidad: 1, subtotal: this.selectedProductos.precioV });
+                    this.itemsAgregado.push({ ...this.selectedProductos, descuento: 0, cantidad: 1, subtotal: this.selectedProductos.precioV });
                 } else {
                     // Si el producto ya existe, puedes mostrar un mensaje de alerta o realizar otra acción
                     this.UsuarioAlerta("error", 'El producto ya está en la lista');
@@ -466,7 +581,9 @@ export default {
                 this.selectedProductos = null;
                 this.$nextTick(() => {
                     this.$refs.cantidadInput.focus();
+                   
                 });
+            
             }
         },
 
@@ -481,6 +598,7 @@ export default {
             me.itemsAgregado = []
             me.montoRecibido = 0
             me.cambio = 0
+            me.cbxArticulo();
         },
 
         GurdarMovimientoCaja() {
@@ -504,7 +622,7 @@ export default {
                 })
                 .then(function (response) {
                     if (response.status === 201) {
-                    console.log(response.data.mensaje)
+                        console.log(response.data.mensaje)
 
                     }
                 })
@@ -535,7 +653,7 @@ export default {
                 artId: item.id, // ID del artículo
                 vndCantidad: item.cantidad, // Cantidad vendida
                 vndPrecioVenta: item.precioV, // Precio de venta
-                vndDescuento: 0, // Descuento (ajusta según necesites)
+                vndDescuento: item.descuento, // Descuento (ajusta según necesites)
                 vndActivo: 1 // Activo (ajusta según necesites)
             }));
             if (detallesVenta.length <= 0) {
@@ -555,18 +673,38 @@ export default {
                         me.UsuarioAlerta("success", response.data.mensaje);
                         me.cjtReferencia = response.data.cjtReferencia;
                         me.GurdarMovimientoCaja()
+                        debugger
+                        me.generatePDF(me.itemsAgregado)
                         me.isBusy = false;
                         me.vaciarControles()
                     }
                 })
                 .catch((e) => {
-                    me.showOverlay = false;
-                    me.UsuarioAlerta("error", e.response.data.error);
+                    if (!e.response || !e.response.data || !e.response.data.error) {
+                        // No hay error específico
+                        me.showOverlay = false;
+                        me.UsuarioAlerta("error", "Error al Generar PDF" + e.message);
+                    } else {
+                        // Hay un mensaje de error específico
+                        me.showOverlay = false;
+                        
+                        me.UsuarioAlerta("error", e.response.data.error);
+                    }
+                    // me.showOverlay = false;
+                    // me.UsuarioAlerta("error", e.response ? e.response.data.error : "Error desconocido");
                 });
         },
         actualizarCantidad(item, nuevaCantidad) {
             item.cantidad = nuevaCantidad;
+           
         },
+
+
+        precioDescuento(item, precioDescuento) {
+            item.descuento = precioDescuento
+
+        },
+
         onFiltered(filteredItems) {
             // Trigger pagination to update the number of buttons/pages due to filtering
             this.totalRows = filteredItems.length;
@@ -575,7 +713,7 @@ export default {
             if (index >= 0 && index < this.itemsAgregado.length) {
                 this.itemsAgregado.splice(index, 1);
                 this.montoRecibido = 0
-                this.cambio=0
+                this.cambio = 0
 
             }
         },
@@ -680,4 +818,5 @@ export default {
     /* Cambia el color del texto, si lo deseas */
     /* Agrega otros estilos según tus preferencias */
 }
+
 </style>

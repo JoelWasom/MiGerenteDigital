@@ -12,6 +12,8 @@ use App\Http\Controllers\vnDetTxnController;
 use App\Http\Controllers\intArticuloController;
 use App\Http\Controllers\cjtTxnController;
 use Illuminate\Database\Eloquent\HigherOrderBuilderProxy;
+use PhpParser\Node\Stmt\Return_;
+use PhpParser\Node\Stmt\TryCatch;
 
 class vntTxnController extends Controller
 {
@@ -61,7 +63,7 @@ class vntTxnController extends Controller
                 if (!$articulo || $articulo->artCantidad < $vndCantidad) {
                     // No hay suficiente stock para el producto, realizar un rollback
                     DB::rollBack();
-                    return response()->json(['mensaje' => 'No hay suficiente stock para el producto con ID ' . $artId], 400);
+                    return response()->json(['error' => 'No hay suficiente stock para el producto:  ' . $articulo->artNombre], 400);
                 }
             }
 
@@ -118,6 +120,62 @@ class vntTxnController extends Controller
         }
     }
 
+    public function InactiveVenta(Request $request )  {
+        $obj_bitacora = new bitacoraController();
+        $userId = $request->userId;
+
+        db::beginTransaction();
+        try {
+            $tabla='vnttxn';
+            DB::table($tabla)
+            ->where('vntId',$request->vntId)
+            ->update(['vntActivo' => 0]);   
+            
+            $obj_bitacora->insertarBitacora($tabla,$request->vntId,$userId,'ANULACION','Elimnacion de Venta');
+            $resultRollback = $this->RollbackVenta($request->vntId,$userId);
+            DB::commit();
+            return response()->json(['Mensaje' => 'Operaciòn Realizado con Éxito'], 201);           
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'No se Logró realizar la operación de la Venta: '. $e->getMessage()], 409); 
+        }
+    }
+
+    public function RollbackVenta($vntId,$userId) {
+        $intArticuloController = new intArticuloController();
+        $obj_cjttxn = new cjtTxnController();
+
+        /** 00.Obtenemos el Nro de Venta */
+        $vntNumero = DB::table('vntTxn')->where('vntId',$vntId)->first();   
+        
+        /** 01.Obtenemos el detalle actual de ventas para revertir la cantidad del stock en los articulos */    
+        $detalleVenta = DB::table('vndettxn')->where('vntid',$vntId)->where('vndActivo',1)->get();
+        foreach ($detalleVenta as $itemDetalle) {
+            $artId = $itemDetalle->artId;
+            $Cantidad = $itemDetalle->vndCantidad;
+            $intArticuloController->aumentarCantidadArticulo($artId, $Cantidad);
+        }   
+        
+        /** 02. Inactivamos el detalle de ventas con 0=inactivo */
+        DB::table('vndettxn')->where('vntid', $vntId)->where('vndActivo',1)->update(['vndActivo' => 0]);
+        
+        /** 03. Obtenemos el Id del inventario de ventas*/ 
+        $invId = DB::table('invtxn')->where('invReferencia',$vntNumero->vntNumero)->where('invActivo',1)->first();
+        
+        /** 03. Inactivamos el movimiento de inventario */
+        DB::table('invtxn')->where('invId', $invId->invId)->update(['invActivo' => 0]);
+        
+        /** 04. Inactivamos el detalle de transacción */
+        DB::table('indettxn')->where('invId', $invId->invId)->update(['indActivo' => 0]);
+        
+        /** 05. Anulamos el movimiento en CAJA */
+        $obj_cjttxn->AnularMovimientoCaja($vntNumero->vntNumero, $userId);
+        
+        
+    }   
+
+
+    
     public function ListaFormaPago()
     {
 
@@ -140,7 +198,7 @@ class vntTxnController extends Controller
                     'vntTxn.vntNumero',
                     DB::raw('CONCAT(gntcliente.cliNombre, " ", gntcliente.cliApp, " ", gntcliente.cliApm) AS nombreCliente'),
                     'vntTxn.vntFechaCreacion',
-                    DB::raw('SUM(vnDetTxn.vndCantidad * vnDetTxn.vndPrecioVenta) as totalVenta'),
+                    DB::raw('SUM(CASE WHEN vnDetTxn.vndDescuento > 0 THEN vnDetTxn.vndDescuento * vnDetTxn.vndCantidad ELSE vnDetTxn.vndPrecioVenta * vnDetTxn.vndCantidad END) as totalVenta'),
                     'gntFormaPago.fpnombre as FormaPago' // Utilizar el nombre de la forma de pago desde la tabla gntFormaPago
                 )
                 ->leftJoin('vnDetTxn', 'vntTxn.vntId', '=', 'vnDetTxn.vntid')

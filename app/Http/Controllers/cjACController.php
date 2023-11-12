@@ -26,7 +26,10 @@ class cjACController extends Controller
             if ($aperturaCajaExistente == null) {
                 return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'],201);
                 // Hay una caja aperturada
-            } 
+            } else {
+
+                return response()->json(['mensaje' => 'cierre'],202);
+            }
         
         } catch (\Exception $e) {
             // Manejo de la excepción si ocurre un error en la consulta
@@ -99,7 +102,7 @@ class cjACController extends Controller
                 'userId.required' => 'El campo Usuario es requerido.',
                 // 'acMontoCierre.required' => 'El campo Monto de Cierre es requerido.',
                 // 'acFechaCierre.required' => 'El campo Fecha de Cierre es requerido.',
-                'acActivo.required' => 'El campo Activo es requerido.',
+                // 'acActivo.required' => 'El campo Activo es requerido.',
             ];
 
             // Validación de campos
@@ -108,7 +111,7 @@ class cjACController extends Controller
                 'userId' => 'required|numeric',
                 // 'acMontoCierre' => 'required|numeric',
                 // 'acFechaCierre' => 'required|date',
-                'acActivo' => 'required',
+                // 'acActivo' => 'required',
             ], $mensajesErrores);
 
 
@@ -148,9 +151,9 @@ class cjACController extends Controller
                 ->where('cjttxn.cajId', $datosValidados['cajId'])
                 ->where('vnttxn.ttxId', 1) // Suponiendo que 1 es el ID del tipo de transacción de venta
                 ->where('vnttxn.vntActivo', 1)
-                ->sum('vndettxn.vndPrecioVenta');
+                ->sum(DB::raw('IF(vndettxn.vndDescuento > 0, vndettxn.vndDescuento, vndettxn.vndPrecioVenta)'));
 
-            echo $montoVentas;
+            // echo $montoVentas;
             // Calcular el monto de cierre sumando el monto de apertura y las ventas
             $montoCierre = $montoApertura + $montoVentas;
 
@@ -171,7 +174,7 @@ class cjACController extends Controller
             DB::commit();
 
             // Retornar una respuesta de éxito
-            return response()->json(['mensaje' => 'Cierre de caja realizado con éxito'], 200);
+            return response()->json(['mensaje' => 'Monto de Cierre :'.  $montoCierre], 201);
         } catch (\Exception $e) {
             // Manejo de la excepción
             DB::rollBack();

@@ -386,7 +386,38 @@ export default {
         });
       }
     },
+    UsuarioAlerta(variant, msj) {
+      let title, confirmButtonClass, showClass;
 
+      if (variant === "success") {
+        title = "Buen Trabajo";
+        confirmButtonClass = "btn btn-success";
+        showClass = "animate__animated animate__bounceIn";
+      } else if (variant === "error") {
+        title = "¡Error!";
+        confirmButtonClass = "btn btn-danger";
+        showClass = "btn btn-danger animate__animated animate__rubberBand";
+      } else if (variant === "warning") {
+        title = "Precaución";
+        confirmButtonClass = "btn btn-warning";
+        showClass = "animate__animated animate__wobble";
+      } else {
+        // Puedes agregar más casos según tus necesidades.
+      }
+
+      this.$swal({
+        title: title,
+        text: msj,
+        icon: variant,
+        customClass: {
+          confirmButton: confirmButtonClass,
+        },
+        showClass: {
+          confirmButton: showClass,
+        },
+        buttonsStyling: true,
+      });
+    },
     login() {
       var msg = "";
       let me = this;
@@ -408,6 +439,8 @@ export default {
           me.token = a;
           if (response.status === 200) {
             me.users();
+
+
           }
         })
         .catch((e) => {
@@ -445,6 +478,7 @@ export default {
             localStorage.setItem("nombre_rol", me.nombrePerfil)
             me.accesos();
             me.PermisoOperacion()
+            me.DatosEmpresa()
           }
         })
         .catch((e) => {
@@ -463,7 +497,7 @@ export default {
         this.$store.state.app.NombrePerfil = me.nombrePerfil
         this.$store.state.app.NombreUsuario = me.usuario
         this.$store.state.app.token = me.token
-
+        this.$store.state.app.NombreEmpresa = me.NombreEmpresa
         me.habilitaMenu();
       } else {
         me.success("danger", me.usuario);
@@ -471,28 +505,40 @@ export default {
     },
 
 
-    usuarioPerfil() {
+    DatosEmpresa() {
       var msg = "";
       let me = this;
       const axios = require("axios").default;
       const params = new URLSearchParams();
-      params.append("nombreUsuario", me.usuario);
-      var url = "api/auth/usuarioPerfil";
+      var url = "api/auth/DatosEmpresa";
       me.loaded = false;
       var a = "";
       axios
-        .post(url, params)
+        .get(url)
         .then(function (response) {
           var resp = response.data;
-          me.perfilUsuario = resp.PERFIL;
+          
+          me.$store.dispatch('app/cambiaNombreEmpresa', resp[0].emNombre)
+          me.$store.dispatch('app/cambiaDireccionEmpresa', resp[0].emDireccion)
+          me.$store.dispatch('app/cambiaTelefonoEmpresa', resp[0].emTelefono)
+          me.$store.dispatch('app/cambiaLogoEmpresa', resp[0].emLogo)
+          me.$store.dispatch('app/cambiaNitEmpresa', resp[0].emNit)
+
+
         })
         .catch((e) => {
-          me.accesos() + e;
+          if (e.response) {
+            // Si la respuesta del servidor contiene información de error
+            console.error('Error del servidor: ' + e.response.data.error);
+          } else {
+            // Si la respuesta es undefined o no contiene información de error
+            console.error('Error en la solicitud: ' + e.message);
+          }
         });
       //forma de optener los datos deñ menu
-      alert(me.perfilUsuario);
+
     },
- 
+
   },
 };
 </script>
