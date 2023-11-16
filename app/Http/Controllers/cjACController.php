@@ -24,6 +24,12 @@ class cjACController extends Controller
 
      
             if ($aperturaCajaExistente == null) {
+                if ($cajId==1){
+                    return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'],201);
+                } else{
+                    return response()->json(['mensaje' => 'La caja Gastos no Fue Aperturada'],201);
+                }
+
                 return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'],201);
                 // Hay una caja aperturada
             } else {

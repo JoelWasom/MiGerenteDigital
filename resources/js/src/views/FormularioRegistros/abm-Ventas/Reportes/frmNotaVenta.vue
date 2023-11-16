@@ -11,7 +11,6 @@
 </template>
 
 <script>
-import html2pdf from 'html2pdf.js';
 
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';

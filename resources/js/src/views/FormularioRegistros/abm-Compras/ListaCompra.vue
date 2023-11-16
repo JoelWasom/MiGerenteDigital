@@ -264,6 +264,7 @@ export default {
     },
     mounted() {
         this.GetAllShopping()
+        this.VerificarAperturaCaja()
     },
     methods: {
         clickAccion(item, accion) {
@@ -280,10 +281,10 @@ export default {
                 this.$refs["frm-compra"].show();
             }
             if (accion === "ver") {
-                this.$store.dispatch('app/cambiaId', item["artId"])
-                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'success', icono: 'SaveIcon', texto: 'Guardar', Bclass: 'd-none' })
+                this.$store.dispatch('app/cambiaId', item["cmtId"])
+                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'primary', icono: 'SaveIcon', texto: 'Generar PDF', Bclass: '' })
 
-                this.$refs["frm-articulo"].show();
+                this.$refs["frm-compra"].show();
             }
             if (accion === "eliminar") {
                 this.ControlaEliminar(item)
@@ -361,6 +362,34 @@ export default {
                 me.UsuarioAlerta("danger");
                 console.log("danger", "No se Realizó la Operación: " + e);
             });
+        },
+        VerificarAperturaCaja() {
+            let me = this;
+
+
+            const axios = require("axios").default;
+            const params = new URLSearchParams();
+            /** CajId=2, es gastos */
+            params.append('cajId', 2); 
+            me.items = [];
+
+            var url = "api/auth/usuarioTieneCajaAbierta";
+            me.loaded = false;
+            var lista = [];
+            axios
+                .post(url, params)
+                .then(function (response) {
+                    var resp = response.data;
+
+                    if (response.status === 201) {
+                        me.UsuarioAlerta("warning", response.data.mensaje)
+                    }
+                    // me.items = lista;
+                    me.loaded = true;
+                })
+                .catch((e) => {
+                    me.UsuarioAlerta("error", e.response.data.error);
+                });
         },
         onFiltered(filteredItems) {
             // Trigger pagination to update the number of buttons/pages due to filtering

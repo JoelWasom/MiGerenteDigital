@@ -1,17 +1,17 @@
 <template>
     <section>
+        <b-row v-show="txtNumero!=''">
+            <b-col sm="12" md="12" xl="12">
+                <b-card border-variant="info">
+                    <h5>Nro. de Compra: <b>{{ txtNumero }}</b>, Monto disponible caja Gastos:</h5>
+                </b-card>
+            </b-col>
+        </b-row>
         <b-row>
             <b-col sm="12" md="3" xl="3">
                 <b-row>
                     <b-col>
                         <b-card border-variant="info">
-                            <b-row>
-                                <b-col sm="12" md="12" xl="12">
-                                    <b-form-group>
-                                        <b-form-text v-model="txtNumero"></b-form-text>
-                                    </b-form-group>
-                                </b-col>
-                            </b-row>
                             <b-row>
                                 <b-col sm="12" md="12" xl="12">
 
@@ -79,8 +79,7 @@
                                     </b-form-group>
                                 </b-col>
                             </b-row> -->
-                        </b-card>
-                        
+                        </b-card>                        
                     </b-col>
                 </b-row>
             </b-col>
@@ -138,7 +137,6 @@
                                             {{ row.item.precioC * row.item.cantidad }}
                                         </template>
                                         <template #cell(Acción)="row">
-
                                             <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'" variant="flat-danger"
                                                 class="btn-icon rounded-circle"
                                                 :class="{ 'd-none': $store.state.app.isElimina }"
@@ -216,6 +214,8 @@ import {
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 export default {
     components: {
         VBTooltip,
@@ -271,7 +271,6 @@ export default {
             txtFechaCompra: null,
             cjtReferencia: 0, // Monto recibido
             cambio: 0, // Cambio a entregar
-            vntNumero: "",
             isBusy: false,
             filter: "",
             stickyHeader: true,
@@ -558,6 +557,7 @@ export default {
                     me.cjtReferencia = response.data.cjtReferencia;
                     me.AlertaMensaje("success", response.data.mensaje);
                     me.GurdarMovimientoCaja()
+                    me.generatePDF(me.itemsAgregado)
                     me.isBusy = false;
                     me.vaciarControles()
                 }
@@ -652,12 +652,113 @@ export default {
                 }
             });
         },
+        generatePDF(Articulos) {
+            try {
+                // Crear un nuevo documento PDF
+                const doc = new jsPDF();
+                let me = this;
+
+                // Agregar el logo de la empresa (reemplaza 'ruta_al_logo' con la ruta de tu imagen)
+                const image = new Image();
+                var imgData = 'data:image/png;base64,' + me.$store.state.app.LogoEmpresa;
+                doc.addImage(imgData, 'PNG', 15, 5, 25, 25);
+                doc.setFont('helvetica', 'neue')
+                doc.setFontSize(8);
+                // doc.text(me.$store.state.app.NombreEmpresa, 40, 20);
+                doc.text('DIRECCION : ' + me.$store.state.app.DireccionEmpresa, 40, 20);
+                doc.text('TELEFONO  : ' + me.$store.state.app.TelefonoEmpresa, 40, 25);
+                doc.text('Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
+                const currentDate = new Date(); // Obtiene la fecha actual
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                const formattedDate = currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
+
+                // Configuración de la nota de venta
+                const notaDeCompra = {
+                    numero: me.cjtReferencia,
+                    fecha: formattedDate,
+                    cliente: me.selectedProveedor.title,
+                    direccion: '123 Calle Principal',
+                    ciudad: 'Ciudad Ejemplo',
+                };
+
+
+                // Datos de los productos
+                const columns = ['Articulo', 'Cantidad','PrecioUnitario', 'SubTotal'];
+                const rows = Articulos.map((producto) => {
+                    const PrecioCompra = parseFloat(producto.precioC);
+                    const subtotal = PrecioCompra * parseInt(producto.cantidad);
+
+                    return [
+                        producto.title || '',
+                        producto.cantidad || 0,
+                        PrecioCompra.toFixed(2), // Mostrar el precio original en la columna 'Precio'
+                        subtotal.toFixed(2),
+                    ];
+                });
+
+                // Agregar el encabezado de la nota de venta
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'neue');
+                doc.text('Nota de Compra', 135, 10);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'neue');
+
+                doc.text('N°:', 135, 20);
+                // doc.setTextColor(110, 107, 123);
+                doc.text(`${notaDeCompra.numero}`, 145, 20);
+                doc.setTextColor(0);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`Fecha: ${notaDeCompra.fecha}`, 135, 28);
+                doc.setFont('helvetica', 'neue');
+                // doc.setTextColor(0);
+                doc.text("Proveedor:", 15, 52);
+                // doc.setTextColor(100);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`${notaDeCompra.cliente}`, 35, 52);
+                const columnStyles = {
+                    0: { halign: 'text-left' }, // Alineación centrada para la primera columna
+                    1: { halign: 'center' }, // Alineación centrada para la segunda columna
+                    2: { halign: 'center' }, // Alineación centrada para la tercera columna
+                    3: { halign: 'center' }, // Alineación centrada para la cuarta columna
+                };
+                // Agregar la tabla de productos
+                doc.autoTable({
+                    startY: 60,
+                    head: [columns],
+                    body: rows,
+                    columnStyles: columnStyles,
+                });
+
+
+                // Calcular el total
+                // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
+                const total = Articulos.reduce((acc, producto) => {
+                    const subtotal = parseFloat(producto.precioC) * parseInt(producto.cantidad);
+                    return acc + subtotal;
+                }, 0);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`Total Bs.:`, 145, doc.autoTable.previous.finalY + 10);
+                doc.text(`${total.toFixed(2)}`, 175, doc.autoTable.previous.finalY + 10);
+
+                doc.setFont('times', 'normal');
+                doc.setFontSize(12);
+
+                // Guardar el documento PDF como un Data URI
+                const dataUri = doc.output('datauristring');
+
+                // Abrir el PDF en una nueva ventana o pestaña
+                const newWindow = window.open();
+                newWindow.document.write('<iframe width="100%" height="100%" src="' + dataUri + '"></iframe');
+            } catch (error) {
+                me.UsuarioAlerta("error", "Error al generar el PDF: " + error.message);
+            }
+        },
 
         /** Realiza la Operacion Correspondiente */
         validaOperacion(accion) {
             if (accion === "guardar") { this.AddShopping() }
             if (accion === "editar") { this.UpdateShopping() }
-            if (accion === "ver") { alert("ajecutara el ver") }
+            if (accion === "ver") { this.generatePDF()}
         },
 
         /** Este evento elimina Articulo del Carrito */
