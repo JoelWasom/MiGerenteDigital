@@ -92,11 +92,18 @@ Route::group(['prefix' => 'auth'], function () {
   Route::get('ListadoCaja', [cjCajaController::class, 'ListadoCaja']);
   Route::post('CrearCaja', [cjCajaController::class, 'CrearCaja']);
 
+  
+
+
   //cjAperturaCierre
   Route::post('AperturaCaja', [cjACController::class, 'AperturaCaja']);
   Route::post('cerrarCaja', [cjACController::class, 'cerrarCaja']);
   Route::get('obtenerAperturasCaja', [cjACController::class, 'obtenerAperturasCaja']);
   Route::post('usuarioTieneCajaAbierta', [cjACController::class, 'usuarioTieneCajaAbierta']);
+  /** armamos la ruta para  */
+  Route::get('GetBalanceShopping', [cjACController::class, 'GetBalanceShopping']);
+  Route::get('GetTotalShoppingInCaja', [cjACController::class, 'GetTotalShoppingInCaja']);
+  Route::get('VerifyCajaOpeningShoppings', [cjACController::class, 'VerifyCajaOpeningShoppings']);
   
   //cjtTxnController
   Route::post('guardarMovimientoCaja', [CjtTxnController::class, 'guardarMovimientoCaja']);

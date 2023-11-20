@@ -11,34 +11,24 @@ class cjACController extends Controller
 {
     public function usuarioTieneCajaAbierta(Request $request)
     {
-       
         $cajId = $request->cajId;
-        $acFechaApertura =$request->acFechaApertura;
         try {
             // Verificar si existe un registro de apertura de caja para el usuario y la caja en el día actual
             $aperturaCajaExistente = DB::table('cjAperturaCierre')
                 ->where('cajId', $cajId)
                 ->whereDate('acFechaApertura', now()->toDateString())
                 ->first();
-        //   echo now()->toDateString();
-
-     
             if ($aperturaCajaExistente == null) {
-                if ($cajId==1){
+                if ($cajId=='1'){
                     return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'],201);
                 } else{
                     return response()->json(['mensaje' => 'La caja Gastos no Fue Aperturada'],201);
                 }
-
-                return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'],201);
                 // Hay una caja aperturada
             } else {
-
                 return response()->json(['mensaje' => 'cierre'],202);
-            }
-        
+            }        
         } catch (\Exception $e) {
-            // Manejo de la excepción si ocurre un error en la consulta
             return ['error'=>'Error al verificar la apertura de caja: ' . $e->getMessage(),400];
         }
     }
@@ -72,8 +62,7 @@ class cjACController extends Controller
                 ->whereDate('acFechaApertura', now()->toDateString())
                 ->first();
             if ($cajaAbiertaHoy) {
-
-                return response()->json(['error' => 'Ya se Realizo la Apertura'], 400);
+                return response()->json(['error' => 'Ya se realizó la apertura correspondiente.'], 400);
             }
 
 
@@ -200,6 +189,53 @@ class cjACController extends Controller
             return response()->json($aperturasCaja, 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al obtener las aperturas de caja: ' . $e->getMessage()], 500);
+        }
+    }
+    /** Obtner la suma total en caja actual aperturada paras las compras */
+    public function GetTotalShoppingInCaja(){
+        try{
+            $montoCompras = DB::table('cjttxn')
+                ->join('cjcaja', 'cjcaja.cajId', '=', 'cjttxn.cajId')
+                ->join('cjAperturaCierre', 'cjAperturaCierre.cajId', '=', 'cjcaja.cajId')
+                ->whereRaw('cjcaja.`cajId`=2 and cjttxn.`cjtActivo`=1 and cjaperturacierre.`acActivo`=1 and cjttxn.`cjtFechaTransaccion` >= cjaperturacierre.`acFechaApertura`')
+                ->sum('cjttxn.cjtMonto');
+                return $montoCompras;
+        } catch(\Exception $ex){
+            return response()->json(['mensaje' => 'Error al realizar la suma de compras ' . $ex->getMessage()], 500);
+        }
+    }
+    /** Obtener el saldo de caja aperturada para las compras */
+    public function GetBalanceShopping()
+    {
+        try {
+            $montoAperturaCajaComprasActual = DB::table('cjAperturaCierre AS ac')
+                ->join('cjCaja AS caj', 'ac.cajId', '=', 'caj.cajId')
+                ->whereRaw('caj.`cajId`=2 AND ac.`acActivo`=1 and ac.`acMontoApertura`>0 and ac.`acMontoCierre`=0')
+                ->value('ac.acMontoApertura');
+
+            $totalComprasCajaActual = $this->GetTotalShoppingInCaja();
+            $saldoDelDiaActual = $montoAperturaCajaComprasActual - $totalComprasCajaActual;
+            return response()->json(['dataSaldoCompras'=>$saldoDelDiaActual, 'montoAperturaCompras'=>$montoAperturaCajaComprasActual,'totalComprasCajaActual'=>$totalComprasCajaActual,'fechaActual'=>now()->toDateString()], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al obtener las aperturas de caja: ' . $e->getMessage()], 500);
+        }
+    }
+    /** Verifica si tiene habilitado la caja de apertura de gastos (Compras) */
+    public function VerifyCajaOpeningShoppings()
+    {
+        try {
+            // Verificar si existe un registro de apertura de caja para el usuario y la caja en el día actual
+            $aperturaCajaExistente = DB::table('cjAperturaCierre AS ac')
+                ->join('cjCaja AS caj', 'ac.cajId', '=', 'caj.cajId')
+                ->whereRaw('caj.`cajId`=2 AND ac.`acActivo`=1 and ac.`acMontoApertura`>0 and ac.`acMontoCierre`=0')
+                ->first();
+            if ($aperturaCajaExistente == null) {
+                return response()->json(['mensaje' => 'La caja gastos no fue Aperturada'],201);
+            } else {
+                return response()->json(['mensaje' => 'cierre'],202);
+            }        
+        } catch (\Exception $e) {
+            return ['error'=>'Error al verificar la apertura de caja: ' . $e->getMessage(),400];
         }
     }
 }

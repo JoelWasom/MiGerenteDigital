@@ -3,7 +3,14 @@
         <b-row v-show="txtNumero!=''">
             <b-col sm="12" md="12" xl="12">
                 <b-card border-variant="info">
-                    <h5>Nro. de Compra: <b>{{ txtNumero }}</b>, Monto disponible caja Gastos:</h5>
+                    <h5>Nro. de Compra: <b style="font-size: x-large;">{{ txtNumero }}</b>, Monto disponible caja Gastos: <b style="font-size: x-large;">{{cjtSaldoAperturaDia.toFixed(2)}}</b></h5>
+                </b-card>
+            </b-col>
+        </b-row>
+        <b-row v-show="txtNumero==''">
+            <b-col sm="12" md="12" xl="12">
+                <b-card border-variant="info">
+                    <h5>Monto disponible caja Gastos: <b style="font-size: x-large;">{{cjtSaldoAperturaDia.toFixed(2)}}</b></h5>
                 </b-card>
             </b-col>
         </b-row>
@@ -269,7 +276,8 @@ export default {
             txtNumero: "",
             txtUserId:"",
             txtFechaCompra: null,
-            cjtReferencia: 0, // Monto recibido
+            cjtReferencia: 0, // Monto recibido,
+            cjtSaldoAperturaDia:0,
             cambio: 0, // Cambio a entregar
             isBusy: false,
             filter: "",
@@ -316,6 +324,7 @@ export default {
         if (this.$store.state.app.TipoAccion === "editar" || this.$store.state.app.TipoAccion === "ver") {
             this.GetShoppingById()
         }
+        this.GetSaldoCajaActual()
     },
     computed: {
         totalPagarCalculado() {
@@ -560,6 +569,7 @@ export default {
                     me.generatePDF(me.itemsAgregado)
                     me.isBusy = false;
                     me.vaciarControles()
+                    me.GetSaldoCajaActual()
                 }
             }).catch((e) => {
                 me.showOverlay = false;
@@ -605,12 +615,32 @@ export default {
                     me.showOverlay = false;
                     me.cjtReferencia = response.data.cjtReferencia;
                     me.AlertaMensaje("success", response.data.mensaje);
+                    me.GurdarMovimientoCaja()                    
+                    me.generatePDF(me.itemsAgregado)
                     me.isBusy = false;
                     me.vaciarControles()
+                    me.GetSaldoCajaActual()
                 }
             }).catch((e) => {
                 me.showOverlay = false;
                 me.AlertaMensaje("error", "Actualizar Registro Compra, Detalles: ", e.response.data.error);
+            });
+        },
+        GetSaldoCajaActual() {
+            let me = this;
+            const axios = require("axios").default;
+            me.items = [];
+            me.isBusy = true;
+            var url = "api/auth/GetBalanceShopping";
+            me.loaded = false;
+            var lista = [];
+            axios.get(url).then(function (response) {
+                var resp = response.data;
+                me.cjtSaldoAperturaDia=resp.dataSaldoCompras;
+                me.isBusy = false;
+                me.loaded = true;
+            }).catch((e) => {
+                me.AlertaMensaje("error", "Calcular Saldo Compras, Detalles: "+ e.response);
             });
         },
         actualizarCantidad(item, nuevaCantidad) {

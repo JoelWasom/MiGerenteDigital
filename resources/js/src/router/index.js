@@ -114,6 +114,21 @@ const router = new VueRouter({
         redirectIfLoggedIn: false,
       },
     },
+    {
+      path: '/proveeedores',
+      name: 'listado_proveedores',
+      component: () => import('@/views/FormularioRegistros/abm-Proveedor/ListaProveedor.vue'),
+      meta: {
+        pageTitle: 'Proveedores',
+        breadcrumb: [
+          {
+            text: 'Proveedores',
+            active: true,
+          },
+        ],
+        redirectIfLoggedIn: false,
+      },
+    },
 
 
     {

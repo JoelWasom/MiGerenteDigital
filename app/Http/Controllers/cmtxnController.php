@@ -217,7 +217,7 @@ class cmtxnController extends Controller
     public function InactiveShopping(Request $request)
     {
         $obj_bitacora = new bitacoraController();
-        $UsuarioId = 1;
+        $UsuarioId = $request->usrId;
         DB::beginTransaction();
         try {
             $tabla = 'cmtxn';
@@ -227,7 +227,7 @@ class cmtxnController extends Controller
                     'cmtActivo' => 0,
                 ]);
             $obj_bitacora->insertarBitacora($tabla, $request->cmtId, $UsuarioId, 'ANULACION', 'Eliminación de Compras');
-            $resultRollback= $this->RollbackCompras($request->cmtId,$UsuarioId);
+            $resultRollback= $this->RollbackCompras($request->cmtId, $UsuarioId);
             DB::commit();
             return response()->json(['Mensaje' => 'Operaciòn Realizado con Éxito'], 201);
         } catch (\Exception $e) {

@@ -86,4 +86,18 @@ class CjtTxnController extends Controller
             return response()->json(['Mensaje' => 'No se Logró Realizar la Operación: ' . $e->getMessage()], 409);
         }
     }
+    public function GetTotalAmountDayShopping(){
+        try {
+            $montoVentas = DB::table('cjttxn')
+                ->where('cjttxn.cajId', 2)
+                ->where('cjttxn.ttxnId', 2) // Suponiendo que 2 es el ID del tipo de transacción de compra
+                ->where('cjttxn.cjtActivo', 1)
+                ->whereDate('cjttxn.cjtFechaTransaccion', now()->toDateString()) // Compara con la fecha actual
+                ->sum('cjttxn.cjtMonto');
+            
+            return $montoVentas;
+        } catch (\Exception $ex) {
+            return response()->json(['mensaje' => 'Error al realizar la suma de compras ' . $ex->getMessage()], 500);
+        }
+    }
 }

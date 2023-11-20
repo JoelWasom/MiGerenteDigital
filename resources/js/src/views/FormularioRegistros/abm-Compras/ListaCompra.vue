@@ -263,8 +263,9 @@ export default {
         },
     },
     mounted() {
+        this.VerificarAperturaCaja()        
         this.GetAllShopping()
-        this.VerificarAperturaCaja()
+        this.clickAccion('', "apertura")
     },
     methods: {
         clickAccion(item, accion) {
@@ -290,35 +291,37 @@ export default {
                 this.ControlaEliminar(item)
             }
         },
-        UsuarioAlerta(variant) {
+        UsuarioAlerta(variant, msj) {
+            let title, confirmButtonClass, showClass;
 
             if (variant === "success") {
-                this.$swal({
-                    title: "Buen Trabajo",
-                    text: "Operacion Exitosa",
-                    icon: variant,
-                    customClass: {
-                        confirmButton: "btn btn-success",
-                    },
-                    showClass: {
-                        popup: "animate__animated animate__bounceIn",
-                    },
-                    buttonsStyling: true,
-                });
+                title = "Buen Trabajo";
+                confirmButtonClass = "btn btn-success";
+                showClass = "animate__animated animate__bounceIn";
+            } else if (variant === "error") {
+                title = "¡Error!";
+                confirmButtonClass = "btn btn-danger";
+                showClass = "btn btn-danger animate__animated animate__rubberBand";
+            } else if (variant === "warning") {
+                title = "Precaución";
+                confirmButtonClass = "btn btn-warning";
+                showClass = "animate__animated animate__wobble";
             } else {
-                this.$swal({
-                    title: "¡Error!",
-                    text: "No se Logro Realizar la Operacíon",
-                    icon: variant,
-                    customClass: {
-                        confirmButton: "btn btn-danger",
-                    },
-                    showClass: {
-                        popup: "animate__animated animate__tada",
-                    },
-                    buttonsStyling: true,
-                });
+                // Puedes agregar más casos según tus necesidades.
             }
+
+            this.$swal({
+                title: title,
+                text: msj,
+                icon: variant,
+                customClass: {
+                    confirmButton: confirmButtonClass,
+                },
+                showClass: {
+                    confirmButton: showClass,
+                },
+                buttonsStyling: true,
+            });
         },
         ControlaEliminar(item) {
             this.boxTwo = "";
@@ -348,6 +351,7 @@ export default {
             const axios = require("axios").default;
             const params = new URLSearchParams();
             params.append('cmtId', item["cmtId"]);
+            params.append('usrId', this.$store.state.app.UsuarioId);
             var url = "api/auth/InactiveShopping";
             me.isBusy = true;
             axios.post(url, params).then(function (response) {
@@ -365,31 +369,20 @@ export default {
         },
         VerificarAperturaCaja() {
             let me = this;
-
-
             const axios = require("axios").default;
-            const params = new URLSearchParams();
-            /** CajId=2, es gastos */
-            params.append('cajId', 2); 
             me.items = [];
-
-            var url = "api/auth/usuarioTieneCajaAbierta";
+            var url = "api/auth/VerifyCajaOpeningShoppings";
             me.loaded = false;
             var lista = [];
-            axios
-                .post(url, params)
-                .then(function (response) {
-                    var resp = response.data;
-
-                    if (response.status === 201) {
-                        me.UsuarioAlerta("warning", response.data.mensaje)
-                    }
-                    // me.items = lista;
-                    me.loaded = true;
-                })
-                .catch((e) => {
-                    me.UsuarioAlerta("error", e.response.data.error);
-                });
+            axios.get(url).then(function (response) {
+                var resp = response.data;
+                if (response.status === 201) {
+                    me.UsuarioAlerta("warning", response.data.mensaje)
+                }
+                me.loaded = true;
+            }).catch((e) => {
+                me.UsuarioAlerta("error", e.response.data.error);
+            });
         },
         onFiltered(filteredItems) {
             // Trigger pagination to update the number of buttons/pages due to filtering
