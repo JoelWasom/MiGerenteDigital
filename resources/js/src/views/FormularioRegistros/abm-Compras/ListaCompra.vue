@@ -283,7 +283,7 @@ export default {
             }
             if (accion === "ver") {
                 this.$store.dispatch('app/cambiaId', item["cmtId"])
-                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'primary', icono: 'SaveIcon', texto: 'Generar PDF', Bclass: '' })
+                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'warning', icono: 'SaveIcon', texto: 'Generar Nota PDF', Bclass: '' })
 
                 this.$refs["frm-compra"].show();
             }

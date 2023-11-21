@@ -3,7 +3,7 @@
     <section>
         <div>
             <b-modal ref="frmProveedor" id="frmProveedor" ok-title="Cerrar" ok-variant="danger" ok-only size="lg" centered
-                title="Registro de Marcas" @ok="listaProveedor">
+                title="Registro de Proveedores" @ok="listaProveedor">
                 <!-- Diseño del Formulario -->
                 <frm-proveedor></frm-proveedor>
             </b-modal>
@@ -237,7 +237,7 @@ export default {
             }
             if (accion === "ver") {
                 this.$store.dispatch('app/cambiaId', item["id"])
-                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'success', icono: 'SaveIcon', texto: 'Guardar', Bclass: 'd-none' })
+                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'warning', icono: 'FileIcon', texto: 'Ver compras en nota PDF', Bclass: '' })
 
                 this.$refs["frmProveedor"].show();
             }
