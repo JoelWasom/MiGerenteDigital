@@ -17,9 +17,9 @@ class cjCajaController extends Controller
                 ->where('cajActivo', 1)
                 ->get();
 
-            return response()->json($cajas,200);
+            return response()->json($cajas);
         } catch (\Exception $e) {
-            return response()->json(['Mensaje' => 'Error al obtener las cajas activas: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al obtener las cajas activas: ' . $e->getMessage()], 500);
         }
     }
 

@@ -133,7 +133,8 @@ import {
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
 import Frm_Producto from "./frm_Producto/frm_Producto.vue";
-import printJS from 'print-js';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 export default {
   components: {
     BButtonToolbar,
@@ -244,16 +245,115 @@ export default {
 
   },
   methods: {
-    imprimirTabla() {
-      // Utiliza print-js para imprimir la tabla con el ID 'TABLA_ARTICULO'
-      printJS({
-        printable: 'v-b-modal.frm-articulo',
-        type: 'html',
-        importCSS: true,  // Importar estilos CSS
-        printContainer: true,
 
-      });
-    },
+
+    //modificar para reporte
+        generatePDF(Articulo) {
+            try {
+                // Crear un nuevo documento PDF
+                const doc = new jsPDF();
+                let me = this;
+
+                // Agregar el logo de la empresa (reemplaza 'ruta_al_logo' con la ruta de tu imagen)
+                const image = new Image();
+                var imgData = 'data:image/png;base64,' + me.$store.state.app.LogoEmpresa;
+                doc.addImage(imgData, 'PNG', 15, 5, 25, 25);
+                doc.setFont('helvetica', 'neue')
+                doc.setFontSize(8);
+                // doc.text(me.$store.state.app.NombreEmpresa, 40, 20);
+                doc.text('DIRECCION : ' + me.$store.state.app.DireccionEmpresa, 40, 20);
+                doc.text('TELEFONO  : ' + me.$store.state.app.TelefonoEmpresa, 40, 25);
+                doc.text('Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
+                const currentDate = new Date(); // Obtiene la fecha actual
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                const formattedDate = currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
+
+                // Configuración de la nota de venta
+                const notaDeVenta = {
+                    numero: me.cjtReferencia,
+                    fecha: formattedDate,
+                    cliente: me.selectedCliente.title,
+                    direccion: '123 Calle Principal',
+                    ciudad: 'Ciudad Ejemplo',
+                };
+
+
+                // Datos de los productos
+                const columns = ['Articulo', 'Cantidad', 'PrecioUnitario', 'Descuento', 'SubTotal'];
+                const rows = Articulo.map((producto) => {
+                    const precioOriginal = parseFloat(producto.precioV);
+                    const precioUnitario = producto.descuento ? parseFloat(producto.descuento) : precioOriginal;
+                    const subtotal = precioUnitario * parseInt(producto.cantidad);
+
+                    return [
+                        producto.title || '',
+                        producto.cantidad || 0,
+                        precioOriginal.toFixed(2), // Mostrar el precio original en la columna 'Precio'
+                        producto.descuento || 0,
+                        subtotal.toFixed(2),
+                    ];
+                });
+
+                // Agregar el encabezado de la nota de venta
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'neue');
+                doc.text('Nota de Venta', 135, 10);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'neue');
+
+                doc.text('N°:', 135, 20);
+                // doc.setTextColor(110, 107, 123);
+                doc.text(`${notaDeVenta.numero}`, 145, 20);
+                doc.setTextColor(0);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`Fecha: ${notaDeVenta.fecha}`, 135, 28);
+                doc.setFont('helvetica', 'neue');
+                // doc.setTextColor(0);
+                doc.text("Cliente:", 15, 52);
+                // doc.setTextColor(100);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`${notaDeVenta.cliente}`, 35, 52);
+                const columnStyles = {
+                    0: { halign: 'text-left' }, // Alineación centrada para la primera columna
+                    1: { halign: 'center' }, // Alineación centrada para la segunda columna
+                    2: { halign: 'center' }, // Alineación centrada para la tercera columna
+                    3: { halign: 'center' }, // Alineación centrada para la cuarta columna
+                    4: { halign: 'center' }, // Alineación centrada para la quinta columna
+                };
+                // Agregar la tabla de productos
+                doc.autoTable({
+                    startY: 60,
+                    head: [columns],
+                    body: rows,
+                    columnStyles: columnStyles,
+                });
+
+
+                // Calcular el total
+                // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
+                const total = Articulo.reduce((acc, producto) => {
+                    const precioUnitario = producto.descuento ? parseFloat(producto.descuento) : parseFloat(producto.precioV);
+                    const subtotal = precioUnitario * parseInt(producto.cantidad);
+                    return acc + subtotal;
+                }, 0);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`Total Bs.:`, 145, doc.autoTable.previous.finalY + 10);
+                doc.text(`${total.toFixed(2)}`, 175, doc.autoTable.previous.finalY + 10);
+
+                doc.setFont('times', 'normal');
+                doc.setFontSize(12);
+
+                // Guardar el documento PDF como un Data URI
+                const dataUri = doc.output('datauristring');
+
+                // Abrir el PDF en una nueva ventana o pestaña
+                const newWindow = window.open();
+                newWindow.document.write('<iframe width="100%" height="100%" src="' + dataUri + '"></iframe');
+            } catch (error) {
+                me.UsuarioAlerta("error", "Error al generar el PDF: " + error.message);
+            }
+        }
+        ,
 
     clickAccion(item, accion) {
 

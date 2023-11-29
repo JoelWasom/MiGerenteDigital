@@ -352,7 +352,7 @@ export default {
             showOverlay: false,
             booksCategoria: [
                 {
-                    id: "",
+                    id: "", 
                     title: "",
                     icon: 'ListIcon',
                 },

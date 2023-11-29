@@ -19,17 +19,17 @@ class cjACController extends Controller
                 ->whereDate('acFechaApertura', now()->toDateString())
                 ->first();
             if ($aperturaCajaExistente == null) {
-                if ($cajId=='1'){
-                    return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'],201);
-                } else{
-                    return response()->json(['mensaje' => 'La caja Gastos no Fue Aperturada'],201);
+                if ($cajId == '1') {
+                    return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'], 201);
+                } else {
+                    return response()->json(['mensaje' => 'La caja Gastos no Fue Aperturada'], 201);
                 }
                 // Hay una caja aperturada
             } else {
-                return response()->json(['mensaje' => 'cierre'],202);
-            }        
+                return response()->json(['mensaje' => 'cierre'], 202);
+            }
         } catch (\Exception $e) {
-            return ['error'=>'Error al verificar la apertura de caja: ' . $e->getMessage(),400];
+            return ['error' => 'Error al verificar la apertura de caja: ' . $e->getMessage(), 400];
         }
     }
     public function AperturaCaja(Request $request)
@@ -37,6 +37,7 @@ class cjACController extends Controller
         try {
             $mensajesErrores = [
                 'cajId.numeric' => 'El campo ID de caja debe ser un numero.',
+                'cajId.not_in' => 'El campo Caja es Obligatorio',
                 'cajId.required' => 'El campo ID de caja es requerido.',
                 'userId.required' => 'El campo Usuario es requerido.',
                 'userId.numeric' => 'El campo ID usuario debe ser un numero .',
@@ -48,12 +49,26 @@ class cjACController extends Controller
 
             // Validación de campos
             $datosValidados = $request->validate([
-                'cajId' => 'required|numeric',
+                'cajId' => 'required|numeric|not_in:0',
                 'userId' => 'required|numeric',
                 'acMontoApertura' => 'required|numeric',
                 'acFechaApertura' => 'date',
                 'acActivo' => 'numeric',
             ], $mensajesErrores);
+
+
+            //Verificar  si existe una caja sin cerra en fechas pasadas 
+            $cajaSinCerrar = DB::table("cjAperturaCierre")
+                ->where('cajId', $datosValidados['cajId'])
+                ->whereNull('acFechaCierre')
+                ->first();
+            if ($cajaSinCerrar) {
+                $acFechaApertura = $cajaSinCerrar->acFechaApertura;
+                return response()->json(['error' => 'No es posible realizar una nueva apertura. Existe una apertura de caja pendiente de cierre en fechas.
+                ' . $acFechaApertura]);
+            }
+
+
 
             // Verificar si ya se abrió la caja en el mismo día
             $cajaAbiertaHoy = DB::table('cjAperturaCierre')
@@ -62,7 +77,7 @@ class cjACController extends Controller
                 ->whereDate('acFechaApertura', now()->toDateString())
                 ->first();
             if ($cajaAbiertaHoy) {
-                return response()->json(['error' => 'Ya se realizó la apertura correspondiente.'], 400);
+                return response()->json(['error' => 'Ya se realizó la apertura correspondiente.']);
             }
 
 
@@ -77,6 +92,7 @@ class cjACController extends Controller
                 'acFechaCreacion' => DB::raw('CURRENT_TIMESTAMP'),
             ]);
 
+
             // Agregar el registro en la tabla bitácora
             $bitacora = new bitacoraController();
             $bitacora->insertarBitacora('cjAperturaCierre', $acId, $datosValidados['userId'], 'Nueva Apertura de Caja', 'Se ha registrado una nueva apertura de caja con ID: ' . $acId);
@@ -86,7 +102,7 @@ class cjACController extends Controller
         } catch (\Exception $e) {
             // Manejo de la excepción
             DB::rollBack();
-            return response()->json(['error' => 'Error al registrar la apertura de caja: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al registrar la apertura: ' . $e->getMessage()], 500);
         }
     }
     public function cerrarCaja(Request $request)
@@ -146,7 +162,7 @@ class cjACController extends Controller
                 ->where('cjttxn.cajId', $datosValidados['cajId'])
                 ->where('vnttxn.ttxId', 1) // Suponiendo que 1 es el ID del tipo de transacción de venta
                 ->where('vnttxn.vntActivo', 1)
-                ->sum(DB::raw('IF(vndettxn.vndDescuento > 0, vndettxn.vndDescuento, vndettxn.vndPrecioVenta)'));
+                ->sum(DB::raw('IF(vndettxn.vndDescuento > 0, vndettxn.vndDescuento * vndCantidad, vndettxn.vndPrecioVenta * vndCantidad)'));
 
             // echo $montoVentas;
             // Calcular el monto de cierre sumando el monto de apertura y las ventas
@@ -169,7 +185,7 @@ class cjACController extends Controller
             DB::commit();
 
             // Retornar una respuesta de éxito
-            return response()->json(['mensaje' => 'Monto de Cierre :'.  $montoCierre], 201);
+            return response()->json(['mensaje' => 'Monto de Cierre :' .  $montoCierre], 201);
         } catch (\Exception $e) {
             // Manejo de la excepción
             DB::rollBack();
@@ -192,15 +208,16 @@ class cjACController extends Controller
         }
     }
     /** Obtner la suma total en caja actual aperturada paras las compras */
-    public function GetTotalShoppingInCaja(){
-        try{
+    public function GetTotalShoppingInCaja()
+    {
+        try {
             $montoCompras = DB::table('cjttxn')
                 ->join('cjcaja', 'cjcaja.cajId', '=', 'cjttxn.cajId')
                 ->join('cjAperturaCierre', 'cjAperturaCierre.cajId', '=', 'cjcaja.cajId')
                 ->whereRaw('cjcaja.`cajId`=2 and cjttxn.`cjtActivo`=1 and cjaperturacierre.`acActivo`=1 and cjttxn.`cjtFechaTransaccion` >= cjaperturacierre.`acFechaApertura`')
                 ->sum('cjttxn.cjtMonto');
-                return $montoCompras;
-        } catch(\Exception $ex){
+            return $montoCompras;
+        } catch (\Exception $ex) {
             return response()->json(['mensaje' => 'Error al realizar la suma de compras ' . $ex->getMessage()], 500);
         }
     }
@@ -215,7 +232,7 @@ class cjACController extends Controller
 
             $totalComprasCajaActual = $this->GetTotalShoppingInCaja();
             $saldoDelDiaActual = $montoAperturaCajaComprasActual - $totalComprasCajaActual;
-            return response()->json(['dataSaldoCompras'=>$saldoDelDiaActual, 'montoAperturaCompras'=>$montoAperturaCajaComprasActual,'totalComprasCajaActual'=>$totalComprasCajaActual,'fechaActual'=>now()->toDateString()], 200);
+            return response()->json(['dataSaldoCompras' => $saldoDelDiaActual, 'montoAperturaCompras' => $montoAperturaCajaComprasActual, 'totalComprasCajaActual' => $totalComprasCajaActual, 'fechaActual' => now()->toDateString()], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al obtener las aperturas de caja: ' . $e->getMessage()], 500);
         }
@@ -230,12 +247,12 @@ class cjACController extends Controller
                 ->whereRaw('caj.`cajId`=2 AND ac.`acActivo`=1 and ac.`acMontoApertura`>0 and ac.`acMontoCierre`=0')
                 ->first();
             if ($aperturaCajaExistente == null) {
-                return response()->json(['mensaje' => 'La caja gastos no fue Aperturada'],201);
+                return response()->json(['mensaje' => 'La caja gastos no fue Aperturada'], 201);
             } else {
-                return response()->json(['mensaje' => 'cierre'],202);
-            }        
+                return response()->json(['mensaje' => 'cierre'], 202);
+            }
         } catch (\Exception $e) {
-            return ['error'=>'Error al verificar la apertura de caja: ' . $e->getMessage(),400];
+            return ['error' => 'Error al verificar la apertura de caja: ' . $e->getMessage(), 400];
         }
     }
 }

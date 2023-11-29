@@ -125,7 +125,8 @@
                                                 class="v-b-tooltip-dark text-center" />
                                         </template>
                                         <template #cell(subtotal)="row">
-                                            {{ row.item.descuento > 0 ? row.item.descuento * row.item.cantidad :row.item.precioV * row.item.cantidad }}
+                                            {{ row.item.descuento > 0 ? row.item.descuento * row.item.cantidad
+                                                : row.item.precioV * row.item.cantidad }}
                                         </template>
                                         <template #cell(Acción)="row">
 
@@ -563,7 +564,7 @@ export default {
 
         },
         cargarProducto() {
-            
+
             if (this.selectedProductos) {
                 // Verificar si el producto ya está en la lista itemsAgregado
                 const productoExistente = this.itemsAgregado.find(item => item.id === this.selectedProductos.id);
@@ -581,9 +582,9 @@ export default {
                 this.selectedProductos = null;
                 this.$nextTick(() => {
                     this.$refs.cantidadInput.focus();
-                   
+
                 });
-            
+
             }
         },
 
@@ -687,7 +688,7 @@ export default {
                     } else {
                         // Hay un mensaje de error específico
                         me.showOverlay = false;
-                        
+
                         me.UsuarioAlerta("error", e.response.data.error);
                     }
                     // me.showOverlay = false;
@@ -696,7 +697,7 @@ export default {
         },
         actualizarCantidad(item, nuevaCantidad) {
             item.cantidad = nuevaCantidad;
-           
+
         },
 
 
@@ -818,5 +819,4 @@ export default {
     /* Cambia el color del texto, si lo deseas */
     /* Agrega otros estilos según tus preferencias */
 }
-
 </style>

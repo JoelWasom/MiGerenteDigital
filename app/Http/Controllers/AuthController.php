@@ -342,7 +342,7 @@ class AuthController extends Controller
   public function DatosEmpresa()
   {
       try {
-          $empresa = DB::table('gntEMPRESA')
+          $empresa = DB::table('gntempresa')
               
               ->get();
 

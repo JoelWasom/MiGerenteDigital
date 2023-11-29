@@ -4,6 +4,18 @@
             <b-row>
                 <b-col md="6">
                     <b-form-group>
+                        <label class="d-inline d-lg-flex">Caja</label>
+                        <v-select v-model="selectedCaja" :options="booksCaja" label="title" placeholder="Seleccionar"
+                            style="color:brown ;">
+                            <template #option="{ title, icon }">
+                                <feather-icon :icon="icon" size="16" class="align-middle mr-50" />
+                                <span> {{ title }}</span>
+                            </template>
+                        </v-select>
+                    </b-form-group>
+                </b-col>
+                <b-col md="6">
+                    <b-form-group>
                         <label class="d-inline d-lg-flex">Monto de Apertura</label>
                         <b-form-input v-model="txt_acMontoApertura" :state="txt_acMontoApertura.length ? true : false"
                             required />
@@ -66,7 +78,7 @@ import {
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
-
+import { service } from '../../../../libs/axios'
 export default {
     components: {
         ToastificationContent,
@@ -112,51 +124,84 @@ export default {
             filter: "",
             stickyHeader: true,
             txt_acMontoApertura: 0,
+            selectedCaja: {
+                id: "0",
+                title: "",
+                icon: 'ListIcon',
+            },
+            booksCaja: [
+                {
+                    id: "",
+                    title: "",
+                    icon: 'ListIcon',
+                },
+            ],
         }
     },
     directives: {
         Ripple,
     },
-    mounted() {
 
+    mounted() {
+        let me = this;
+        me.cbxCaja();
     },
     methods: {
         //acciones 
-        Guardar() {
-            let me = this;
+      
+        async Guardar() {
+            try {
+                let me = this
+                me.showOverlay = true;
+                me.isBusy = true;
+                const formData = new FormData();
+                formData.append("cajId", me.selectedCaja.id);
+                formData.append("userId", this.$store.state.app.UsuarioId);
+                formData.append("acMontoApertura", me.txt_acMontoApertura);
+                formData.append("acActivo", 1);
+                const response = await this.$http.post("AperturaCaja", formData)
+                
+                if (response.status === 201) {
+                    this.showOverlay = false;
+                    me.UsuarioAlerta("success", response.data.mensaje);
+                    me.isBusy = false;
+                }
+                if (response.status ===200)
+                {
+                    this.showOverlay = false;
+                    me.UsuarioAlerta("error", response.data.error);
+                    me.isBusy = false;  
+                }
+            } catch (error) {
+            
+                this.UsuarioAlerta("error",  error.response.data.error);
+                this.showOverlay = false;
+            }
+        }, 
 
-            me.showOverlay = true;
-  
+        async cbxCaja() {
+            try {
+                let me = this;
+                const lista = [] ;
+                me.booksCaja =[]
+                const response = await this.$http.get("ListadoCaja")
+                const resp = response.data;      
+                for (let i = 0; i < resp.length; i++) {
 
-            const axios = require("axios").default;
-            const formData = new FormData();
+                    lista.push({
+                        id: resp[i].cajId,
+                        title: resp[i].cajNombre,
+                        icon: 'DollarSignIcon',
+                    });
+                }
+                me.booksCaja = lista;
+            } catch (error) {
+                console.log(error.message);
+                this.UsuarioAlerta("error", error.response );
+                this.showOverlay = false;
+             
+            }
 
-            me.items = [];
-            var urlm = "api/auth/AperturaCaja";
-            me.loaded = false;
-            me.isBusy = true;
-            formData.append("cajId", 1);
-            formData.append("userId", this.$store.state.app.UsuarioId);
-
-            formData.append("acMontoApertura", me.txt_acMontoApertura);
-            formData.append("acActivo", 1);
-            debugger
-            axios
-                .post(urlm, formData)
-                .then(function (response) {
-
-                  
-                    if (response.status == 201) {
-                        me.showOverlay = false;
-                        me.UsuarioAlerta("success", response.data.mensaje);
-                        me.isBusy = false;
-                    }
-                })
-                .catch((e) => {
-                    me.UsuarioAlerta("error", e.response.data.error);
-                    me.showOverlay = false;
-                    console.log("danger", "No se Realizó la Operación: " + e);
-                });
         },
 
         //eventos 
