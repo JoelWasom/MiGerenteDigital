@@ -270,4 +270,22 @@ class cmtxnController extends Controller
         
         $obj_cjttxn->AnularMovimientoCaja($cmtNumero->cmtNumero, $userId);
     }
+    public function GetShoppingByProveedorId(Request $request){
+        try {
+            $dataResults = DB::table('cmdettxn')
+            ->join('cmtxn','cmdettxn.cmdtId','=','cmtxn.cmtId')
+            ->join('intarticulo', 'cmdettxn.artid', '=', 'intarticulo.artId')
+            ->select(
+                'cmtxn.cmtNumero',
+                'intarticulo.artNombre',
+                'cmdettxn.cmdCantidad',
+                'cmdettxn.cmdCosto'
+            )
+            ->where('cmtxn.provId',$request->proveedorId)->where('cmtxn.cmtActivo',1)->where('cmdettxn.cmdActivo',1)
+            ->get();
+            return response()->json($dataResults,200);
+        } catch (\Exception $ex) {
+            return response()->json(['mensaje' => 'Error al obtener la Compra: ' . $ex->getMessage()], 500);
+        }
+    }
 }

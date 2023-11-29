@@ -542,6 +542,9 @@ export default {
             if (me.txtFechaCompra === null) {
                 return me.AlertaMensaje("warning", "Faltan completar campos requeridos para el registro..")
             }
+            if (me.totalPagar > me.cjtSaldoAperturaDia) {
+                return me.AlertaMensaje("warning", "No puede realizar la compra, esta excediendo el monto total al saldo de caja apertura para Gastos..")
+            }
             formData.append("provId", me.selectedProveedor.id); //  ID del Proveedor
             formData.append("userId", this.$store.state.app.UsuarioId); // ID del usuario actual
             formData.append("txnId", 2); //ID del tipo de transacción 1=Ingreso, 2=Egreso
@@ -590,6 +593,9 @@ export default {
             }
             if (me.txtFechaCompra === null) {
                 return me.AlertaMensaje("warning", "Faltan completar campos requeridos para el registro..")
+            }
+            if (me.totalPagar > me.cjtSaldoAperturaDia) {
+                return me.AlertaMensaje("warning", "Está excediendo el monto total al saldo de caja aperturada para Gastos..")
             }
             formData.append("cmtId",this.$store.state.app.idUtilitario);
             formData.append("provId", me.selectedProveedor.id); //  ID del Proveedor
@@ -695,16 +701,16 @@ export default {
                 doc.setFont('helvetica', 'neue')
                 doc.setFontSize(8);
                 // doc.text(me.$store.state.app.NombreEmpresa, 40, 20);
-                doc.text('DIRECCION : ' + me.$store.state.app.DireccionEmpresa, 40, 20);
-                doc.text('TELEFONO  : ' + me.$store.state.app.TelefonoEmpresa, 40, 25);
-                doc.text('Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
+                doc.text(' DIRECCION : ' + me.$store.state.app.DireccionEmpresa, 40, 20);
+                doc.text(' TELEFONO  : ' + me.$store.state.app.TelefonoEmpresa, 40, 25);
+                doc.text(' Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
                 const currentDate = new Date(); // Obtiene la fecha actual
                 const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
                 const formattedDate = currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
 
                 // Configuración de la nota de venta
                 const notaDeCompra = {
-                    numero: me.cjtReferencia,
+                    numero: (me.cjtReferencia==0)?me.txtNumero:me.cjtReferencia,
                     fecha: formattedDate,
                     cliente: me.selectedProveedor.title,
                     direccion: '123 Calle Principal',
@@ -726,7 +732,6 @@ export default {
                     ];
                 });
 
-                // Agregar el encabezado de la nota de venta
                 doc.setFontSize(22);
                 doc.setFont('helvetica', 'neue');
                 doc.text('Nota de Compra', 135, 10);
@@ -744,7 +749,7 @@ export default {
                 doc.text("Proveedor:", 15, 52);
                 // doc.setTextColor(100);
                 doc.setFont('helvetica', 'neue');
-                doc.text(`${notaDeCompra.cliente}`, 35, 52);
+                doc.text(`${notaDeCompra.cliente}`, 40, 52);
                 const columnStyles = {
                     0: { halign: 'text-left' }, // Alineación centrada para la primera columna
                     1: { halign: 'center' }, // Alineación centrada para la segunda columna
@@ -788,7 +793,7 @@ export default {
         validaOperacion(accion) {
             if (accion === "guardar") { this.AddShopping() }
             if (accion === "editar") { this.UpdateShopping() }
-            if (accion === "ver") { this.generatePDF()}
+            if (accion === "ver") { this.generatePDF(this.itemsAgregado)}
         },
 
         /** Este evento elimina Articulo del Carrito */
