@@ -80,6 +80,7 @@ Route::group(['prefix' => 'auth'], function () {
   Route::post('guardarVenta', [vntTxnController::class, 'guardarVenta']);
   Route::get('ListaFormaPago', [vntTxnController::class, 'ListaFormaPago']);
   Route::post('InactiveVenta', [vntTxnController::class, 'InactiveVenta']);
+  Route::post('Venta', [vntTxnController::class, 'Venta']);
   
   // COMPRAS
   Route::get('GetAllShopping', [cmtxnController::class, 'GetAllShopping']);
@@ -143,9 +144,6 @@ Route::group(['prefix' => 'auth'], function () {
 
   //gntCliente
   Route::get('ListaCliente', [gntClienteController::class, 'ListaCliente']);
-
-    
-
   Route::group(['middleware' => 'auth:api'], function () {
     Route::get('logout', [AuthController::class, 'logout']);
     Route::get('user', [AuthController::class, 'user']);

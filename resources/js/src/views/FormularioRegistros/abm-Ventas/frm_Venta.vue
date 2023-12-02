@@ -360,7 +360,7 @@ export default {
                 const rows = Articulo.map((producto) => {
                     const precioOriginal = parseFloat(producto.precioV);
                     const precioUnitario = producto.descuento ? parseFloat(producto.descuento) : precioOriginal;
-                    const subtotal = precioUnitario * parseInt(producto.cantidad);
+                    const subtotal = precioUnitario * parseFloat(producto.cantidad);
 
                     return [
                         producto.title || '',
@@ -410,7 +410,7 @@ export default {
                 // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
                 const total = Articulo.reduce((acc, producto) => {
                     const precioUnitario = producto.descuento ? parseFloat(producto.descuento) : parseFloat(producto.precioV);
-                    const subtotal = precioUnitario * parseInt(producto.cantidad);
+                    const subtotal = precioUnitario * parseFloat(producto.cantidad);
                     return acc + subtotal;
                 }, 0);
                 doc.setFont('helvetica', 'neue');

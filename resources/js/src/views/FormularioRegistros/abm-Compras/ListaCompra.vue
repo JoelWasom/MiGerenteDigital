@@ -116,7 +116,7 @@
                         compras Contado :{{ totalComprasSum }}
                     </b-card-body>
                 </b-card></b-col>
-
+                
         </b-row>
 
     </section>
@@ -158,9 +158,8 @@ import {
     BFormValidFeedback,
     BFormInvalidFeedback,
 } from "bootstrap-vue";
-import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
-
+import Ripple from "vue-ripple-directive";
 import FrmCompra from "./FrmCompra.vue";
 
 

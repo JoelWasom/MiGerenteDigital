@@ -14,6 +14,7 @@ use App\Http\Controllers\cjtTxnController;
 use Illuminate\Database\Eloquent\HigherOrderBuilderProxy;
 use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\TryCatch;
+use Psy\Readline\HoaConsole;
 
 class vntTxnController extends Controller
 {
@@ -189,6 +190,7 @@ class vntTxnController extends Controller
     }
     public function obtenerVentasRealizadas()
     {
+   
         try {
             $ventas = DB::table('vntTxn')
                 ->join('gntcliente', 'vntTxn.cliId', '=', 'gntcliente.cliId')
@@ -204,6 +206,7 @@ class vntTxnController extends Controller
                 ->leftJoin('vnDetTxn', 'vntTxn.vntId', '=', 'vnDetTxn.vntid')
                 ->where('vntTxn.vntCredito', 0) // Filtrar solo las ventas que no son a crédito
                 ->where('vntTxn.vntActivo', 1) // Filtrar solo las ventas activas
+                ->whereDate('vntTxn.vntFechaCreacion',now()->toDateString())
                 ->groupBy('vntTxn.vntId', 'vntTxn.vntNumero', 'gntcliente.cliNombre', 'gntcliente.cliApp', 'gntcliente.cliApm', 'vntTxn.vntFechaCreacion')
                 ->orderBy('vntNumero', 'desc')
                 ->get();
@@ -213,4 +216,38 @@ class vntTxnController extends Controller
             return response()->json(['mensaje' => 'Error al obtener las ventas realizadas: ' . $e->getMessage()], 500);
         }
     }
+
+
+    public function Venta(Request $request)
+    {  
+      $dia=$request->dia;
+        try {
+            $ven = DB::table('vntTxn')
+                ->join('gntcliente', 'vntTxn.cliId', '=', 'gntcliente.cliId')
+                ->leftJoin('gntFormaPago', 'vntTxn.fpId', '=', 'gntFormaPago.fpId') // Unir la tabla de forma de pago
+                ->select(
+                    'vntTxn.vntId',
+                    'vntTxn.vntNumero',
+                    DB::raw('CONCAT(gntcliente.cliNombre, " ", gntcliente.cliApp, " ", gntcliente.cliApm) AS nombreCliente'),
+                    'vntTxn.vntFechaCreacion',
+                    DB::raw('SUM(CASE WHEN vnDetTxn.vndDescuento > 0 THEN vnDetTxn.vndDescuento * vnDetTxn.vndCantidad ELSE vnDetTxn.vndPrecioVenta * vnDetTxn.vndCantidad END) as totalVenta'),
+                    'gntFormaPago.fpnombre as FormaPago' // Utilizar el nombre de la forma de pago desde la tabla gntFormaPago
+                )
+                ->leftJoin('vnDetTxn', 'vntTxn.vntId', '=', 'vnDetTxn.vntid')
+                ->where('vntTxn.vntCredito', 0) // Filtrar solo las ventas que no son a crédito
+                ->where('vntTxn.vntActivo', 1) // Filtrar solo las ventas activas
+                ->whereDate('vntTxn.vntFechaCreacion',$dia)
+                ->groupBy('vntTxn.vntId', 'vntTxn.vntNumero', 'gntcliente.cliNombre', 'gntcliente.cliApp', 'gntcliente.cliApm', 'vntTxn.vntFechaCreacion')
+                ->orderBy('vntNumero', 'asc')
+                ->get();
+
+            return response()->json($ven);
+        } catch (\Exception $e) {
+            return response()->json(['mensaje' => 'Error al obtener las ventas realizadas: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+  
+
 }

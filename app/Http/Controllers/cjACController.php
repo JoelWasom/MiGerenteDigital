@@ -129,47 +129,29 @@ class cjACController extends Controller
             // Verificar si existe un registro de cierre activo para esta caja en la fecha actual
             $registroCierre = DB::table('cjAperturaCierre')
                 ->where('cajId', $datosValidados['cajId'])
-                ->whereDate('acFechaCreacion', now()->toDateString()) // Compara con la fecha actual
-                ->where('acMontoApertura', '>', 0)
-                ->where('acMontoCierre', '>', 0)
+                ->whereNotNull('acFechaApertura')
+                ->whereNull('acFechaCierre')
                 ->where('acActivo', 1)
                 ->first();
-
-            if ($registroCierre) {
+   
+            if (!$registroCierre) {
                 DB::rollBack();
-                return response()->json(['error' => 'Ya se Realizo el Cierre de la caja'], 400);
+                return response()->json(['error' => 'entra por falso'], 400);
             }
-
             DB::beginTransaction();
-
-            // Obtener el monto actual de la apertura de caja
-            $montoApertura = DB::table('cjAperturaCierre')
-                ->where('cajId', $datosValidados['cajId'])
-                ->where('acActivo', 1)
-                ->value('acMontoApertura');
-
-            if ($montoApertura === null) {
-                DB::rollBack();
-                return response()->json(['error' => 'No se encontró una apertura de caja activa para la caja especificada'], 400);
-            }
-
-
-
-            // Sumar el monto de las transacciones de venta (ttxnId = 1) para esa caja
-            $montoVentas = DB::table('vnttxn')
-                ->join('cjttxn', 'vnttxn.userId', '=', 'cjttxn.userId')
+            $ventas = DB::table('vnttxn')
                 ->join('vndettxn', 'vnttxn.vntId', '=', 'vndettxn.vntid')
-                ->where('cjttxn.cajId', $datosValidados['cajId'])
-                ->where('vnttxn.ttxId', 1) // Suponiendo que 1 es el ID del tipo de transacción de venta
+                ->whereDate('vndettxn.vndFechaVenta', '=', now()->toDateString())
                 ->where('vnttxn.vntActivo', 1)
-                ->sum(DB::raw('IF(vndettxn.vndDescuento > 0, vndettxn.vndDescuento * vndCantidad, vndettxn.vndPrecioVenta * vndCantidad)'));
-
+                ->select(DB::raw('SUM(IF(vndettxn.vndDescuento = 0, vndettxn.vndCantidad * vndettxn.vndPrecioVenta, vndettxn.vndCantidad * vndettxn.vndDescuento)) AS totalVenta'))
+                ->first();
             // echo $montoVentas;
             // Calcular el monto de cierre sumando el monto de apertura y las ventas
-            $montoCierre = $montoApertura + $montoVentas;
+            $montoCierre = $ventas->totalVenta;
 
             // Actualizar el registro de cierre de caja en la tabla cjAperturaCierre
             DB::table('cjAperturaCierre')
+                ->where('acId', $registroCierre->acId)
                 ->where('cajId', $datosValidados['cajId'])
                 ->where('acActivo', 1)
                 ->update([
