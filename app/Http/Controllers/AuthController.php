@@ -134,7 +134,8 @@ class AuthController extends Controller
       ], 401);
     } else {
       $user = $request->user();
-      if ($user->activo !== 1) {
+     
+      if ($user->activo === 0) {
         // El usuario no está activo, devuelve una respuesta de error
         return response()->json([
           'message' => 'Usuario Inactivo'
@@ -225,7 +226,7 @@ class AuthController extends Controller
       return response()->json($query_c, 200);
     } catch (\Exception $e) {
       DB::rollBack();
-      return response()->json(['Mensaje' => 'error']);
+      return response()->json(['Mensaje' => 'error'.$e->getMessage()]);
     }
   }
 
@@ -241,8 +242,6 @@ class AuthController extends Controller
         inner join rol as r on a.idrol= r.idrol 
         INNER join menus as m on a.idmenu= m.id 
         INNER JOIN submenu as sub ON m.id =sub.id_menu_padre WHERE r.idrol=  $idperfil ORDER BY m.orden ASC");
- 
-
       DB::commit();
       return response()->json($query_c, 200);
     } catch (\Exception $e) {

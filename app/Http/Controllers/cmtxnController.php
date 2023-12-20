@@ -6,13 +6,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 use App\Http\Controllers\bitacoraController;
-use App\Http\Controllers\InDetTxnController;
 use App\Http\Controllers\InvTxnController;
-use App\Http\Controllers\vnDetTxnController;
 use App\Http\Controllers\intArticuloController;
 use App\Http\Controllers\cjtTxnController;
-use Illuminate\Database\Eloquent\HigherOrderBuilderProxy;
-
+use App\Http\Controllers\cmdetTxnController;
 class cmtxnController extends Controller
 {
     //Obtner las compras Realizadas 

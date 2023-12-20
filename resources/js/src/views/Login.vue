@@ -239,28 +239,24 @@ export default {
           } else {
             for (let i = 0; i < resp.length; i++) {
 
-
-              if (resp[i].idoperacion === 1) {
+              var operacion = resp[i].idoperacion
+              if (parseInt(operacion) === 1) {
                 me.$store.commit('app/setbotonCrear', false)
               }
 
-              if (resp[i].idoperacion === 2) {
+              if (parseInt(operacion) === 2) {
                 me.$store.commit('app/setbotonEditar', false)
               }
 
-              if (resp[i].idoperacion === 3) {
+              if (parseInt(operacion) === 3) {
                 me.$store.commit('app/setbotonEliminar', false)
               }
-              if (resp[i].idoperacion === 4) {
+              if (parseInt(operacion) === 4) {
                 me.$store.commit('app/setbotonVer', false)
 
               }
             }
           }
-
-
-
-
         })
         .catch((e) => {
           alert(e)
@@ -312,7 +308,7 @@ export default {
                   },
                 ],
               });
-              // searchAndBookmarkData.pages.data.push( { title: navMenuItems[navMenuItems.length-1].children[i].title, route: { name:  navMenuItems[navMenuItems.length-1].children[i].route }, icon:navMenuItems[navMenuItems.length-1].children[i].icon, isBookmarked:true }, )
+          
               searchAndBookmarkData.pages.data.push({
                 title:
                   navMenuItems[navMenuItems.length - 1].children[
@@ -327,7 +323,7 @@ export default {
                 icon: navMenuItems[navMenuItems.length - 1].children[
                   navMenuItems[navMenuItems.length - 1].children.length - 1
                 ].icon,
-                isBookmarked: resp[i].favorito,
+                isBookmarked: false,
               });
             }
             else {
@@ -342,7 +338,7 @@ export default {
                   title: navMenuItems[navMenuItems.length - 1].children[navMenuItems[navMenuItems.length - 1].children.length - 1].title,
                   route: { name: navMenuItems[navMenuItems.length - 1].children[navMenuItems[navMenuItems.length - 1].children.length - 1].route, },
                   icon: navMenuItems[navMenuItems.length - 1].children[navMenuItems[navMenuItems.length - 1].children.length - 1].icon,
-                  isBookmarked: resp[i].favorito,
+                  isBookmarked: false,
                 });
             }
           }

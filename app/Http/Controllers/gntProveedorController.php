@@ -16,7 +16,7 @@ class gntProveedorController extends Controller
         $provActivo = 1; // Por defecto, el proveedor se crea activo
 
         try {
-            $provId = DB::table('gntProveedor')->insertGetId([
+            $provId = DB::table('gntproveedor')->insertGetId([
                 'provNombre' => $provNombre,
                 'provDireccion' => $provDireccion,
                 'provTelefono' => $provTelefono,
@@ -39,7 +39,7 @@ class gntProveedorController extends Controller
         $provTelefono = $request->input('provTelefono');
 
         try {
-            DB::table('gntProveedor')
+            DB::table('gntproveedor')
                 ->where('provID', $provId)
                 ->update([
                     'provNombre' => $provNombre,
@@ -55,7 +55,7 @@ class gntProveedorController extends Controller
 
     public function listarProveedores()
     {
-        $proveedores = DB::table('gntProveedor')->where('provActivo', 1)->get();
+        $proveedores = DB::table('gntproveedor')->where('provActivo', 1)->get();
 
         return response()->json($proveedores, 200);
     }
@@ -63,7 +63,7 @@ class gntProveedorController extends Controller
     public function traerProveedor(Request $request)
     {
         $provId = $request->input('provId');
-        $proveedor = DB::table('gntProveedor')
+        $proveedor = DB::table('gntproveedor')
             ->where('provID', $provId)
             ->where('provActivo', 1)
             ->get();
@@ -81,7 +81,7 @@ class gntProveedorController extends Controller
 
         try {
             $provId = $request->input('provId');
-            DB::table('gntProveedor')
+            DB::table('gntproveedor')
                 ->where('provID', $provId)
                 ->update([
                     'provActivo' => 0,

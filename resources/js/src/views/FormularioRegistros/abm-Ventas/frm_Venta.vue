@@ -634,6 +634,12 @@ export default {
 
 
         },
+
+        DetalleVenta(){
+            
+        },
+
+
         Guardar() {
             const me = this;
             me.showOverlay = true;
@@ -674,7 +680,7 @@ export default {
                         me.UsuarioAlerta("success", response.data.mensaje);
                         me.cjtReferencia = response.data.cjtReferencia;
                         me.GurdarMovimientoCaja()
-                        debugger
+              
                         me.generatePDF(me.itemsAgregado)
                         me.isBusy = false;
                         me.vaciarControles()

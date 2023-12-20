@@ -11,10 +11,6 @@ use App\Http\Controllers\InvTxnController;
 use App\Http\Controllers\vnDetTxnController;
 use App\Http\Controllers\intArticuloController;
 use App\Http\Controllers\cjtTxnController;
-use Illuminate\Database\Eloquent\HigherOrderBuilderProxy;
-use PhpParser\Node\Stmt\Return_;
-use PhpParser\Node\Stmt\TryCatch;
-use Psy\Readline\HoaConsole;
 
 class vntTxnController extends Controller
 {
@@ -31,9 +27,9 @@ class vntTxnController extends Controller
             $vntActivo = $request->vntActivo;
             // $vntFechaCreacion = $request->vntFechaCreacion;
 
-            
+
             // Verificar si existen ventas 
-            $vntNumero = DB::table('vntTxn')->max('vntNumero');
+            $vntNumero = DB::table('vnttxn')->max('vntNumero');
 
             if ($vntNumero === null) {
                 // No hay ventas, generar el primer número de venta
@@ -68,8 +64,8 @@ class vntTxnController extends Controller
                 }
             }
 
-            $tablaVntTxn = 'vntTxn';
-            // Insertar datos en la tabla vntTxn usando el controlador VntTxnController
+            $tablaVntTxn = 'vnttxn';
+            // Insertar datos en la tabla vnttxn usando el controlador VntTxnController
             $vntId = DB::table($tablaVntTxn)->insertGetId([
                 'cliId' => $cliId,
                 'userId' => $userId,
@@ -81,12 +77,12 @@ class vntTxnController extends Controller
                 'vntFechaCreacion' => now(),
             ]);
 
-            // Insertar detalles de los productos vendidos en la tabla vnDetTxn usando el controlador vnDetTxnController
+            // Insertar detalles de los productos vendidos en la tabla vndettxn usando el controlador vnDetTxnController
             foreach ($detallesVenta as $detalle) {
                 $detalle['vntid'] = $vntId; // Asignar el vntId al detalle para asociarlo a la venta creada
-                $vnDetTxn =  $vnDetTxnController->guardarDetalleVenta(new Request($detalle));
+                $vndettxn =  $vnDetTxnController->guardarDetalleVenta(new Request($detalle));
             }
-            // echo "$vnDetTxn";
+            // echo "$vndettxn";
 
             // Insertar movimiento en inventario usando el controlador InvTxnController
             $Modulo = "Venta";
@@ -108,75 +104,75 @@ class vntTxnController extends Controller
             }
 
 
-        
+
 
             // Registrar en la bitácora usando el controlador bitacoraController
             $bitacoraController->insertarBitacora($tablaVntTxn, $vntId, $userId, 'Creación de registro', 'Nueva Venta' . "-" . $nuevoVntNumero);
 
             DB::commit();
-            return response()->json(['mensaje' => 'Venta ' . $nuevoVntNumero . ' registrada con éxito','cjtReferencia' => $nuevoVntNumero], 201);
+            return response()->json(['mensaje' => 'Venta ' . $nuevoVntNumero . ' registrada con éxito', 'cjtReferencia' => $nuevoVntNumero], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => 'No se Logró realizar la operación de la Venta: ' . $e->getMessage()], 409);
         }
     }
 
-    public function InactiveVenta(Request $request )  {
+    public function InactiveVenta(Request $request)
+    {
         $obj_bitacora = new bitacoraController();
         $userId = $request->userId;
 
         db::beginTransaction();
         try {
-            $tabla='vnttxn';
+            $tabla = 'vnttxn';
             DB::table($tabla)
-            ->where('vntId',$request->vntId)
-            ->update(['vntActivo' => 0]);   
-            
-            $obj_bitacora->insertarBitacora($tabla,$request->vntId,$userId,'ANULACION','Elimnacion de Venta');
-            $resultRollback = $this->RollbackVenta($request->vntId,$userId);
+                ->where('vntId', $request->vntId)
+                ->update(['vntActivo' => 0]);
+
+            $obj_bitacora->insertarBitacora($tabla, $request->vntId, $userId, 'ANULACION', 'Elimnacion de Venta');
+            $resultRollback = $this->RollbackVenta($request->vntId, $userId);
             DB::commit();
-            return response()->json(['Mensaje' => 'Operaciòn Realizado con Éxito'], 201);           
+            return response()->json(['Mensaje' => 'Operaciòn Realizado con Éxito'], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'No se Logró realizar la operación de la Venta: '. $e->getMessage()], 409); 
+            return response()->json(['error' => 'No se Logró realizar la operación de la Venta: ' . $e->getMessage()], 409);
         }
     }
 
-    public function RollbackVenta($vntId,$userId) {
+    public function RollbackVenta($vntId, $userId)
+    {
         $intArticuloController = new intArticuloController();
         $obj_cjttxn = new cjtTxnController();
 
         /** 00.Obtenemos el Nro de Venta */
-        $vntNumero = DB::table('vntTxn')->where('vntId',$vntId)->first();   
-        
-        /** 01.Obtenemos el detalle actual de ventas para revertir la cantidad del stock en los articulos */    
-        $detalleVenta = DB::table('vndettxn')->where('vntid',$vntId)->where('vndActivo',1)->get();
+        $vntNumero = DB::table('vnttxn')->where('vntId', $vntId)->first();
+
+        /** 01.Obtenemos el detalle actual de ventas para revertir la cantidad del stock en los articulos */
+        $detalleVenta = DB::table('vndettxn')->where('vntid', $vntId)->where('vndActivo', 1)->get();
         foreach ($detalleVenta as $itemDetalle) {
             $artId = $itemDetalle->artId;
             $Cantidad = $itemDetalle->vndCantidad;
             $intArticuloController->aumentarCantidadArticulo($artId, $Cantidad);
-        }   
-        
+        }
+
         /** 02. Inactivamos el detalle de ventas con 0=inactivo */
-        DB::table('vndettxn')->where('vntid', $vntId)->where('vndActivo',1)->update(['vndActivo' => 0]);
-        
-        /** 03. Obtenemos el Id del inventario de ventas*/ 
-        $invId = DB::table('invtxn')->where('invReferencia',$vntNumero->vntNumero)->where('invActivo',1)->first();
-        
+        DB::table('vndettxn')->where('vntid', $vntId)->where('vndActivo', 1)->update(['vndActivo' => 0]);
+
+        /** 03. Obtenemos el Id del inventario de ventas*/
+        $invId = DB::table('invtxn')->where('invReferencia', $vntNumero->vntNumero)->where('invActivo', 1)->first();
+
         /** 03. Inactivamos el movimiento de inventario */
         DB::table('invtxn')->where('invId', $invId->invId)->update(['invActivo' => 0]);
-        
+
         /** 04. Inactivamos el detalle de transacción */
         DB::table('indettxn')->where('invId', $invId->invId)->update(['indActivo' => 0]);
-        
+
         /** 05. Anulamos el movimiento en CAJA */
         $obj_cjttxn->AnularMovimientoCaja($vntNumero->vntNumero, $userId);
-        
-        
-    }   
+    }
 
 
-    
+
     public function ListaFormaPago()
     {
 
@@ -190,24 +186,24 @@ class vntTxnController extends Controller
     }
     public function obtenerVentasRealizadas()
     {
-   
+
         try {
-            $ventas = DB::table('vntTxn')
-                ->join('gntcliente', 'vntTxn.cliId', '=', 'gntcliente.cliId')
-                ->leftJoin('gntFormaPago', 'vntTxn.fpId', '=', 'gntFormaPago.fpId') // Unir la tabla de forma de pago
+            $ventas = DB::table('vnttxn')
+                ->join('gntcliente', 'vnttxn.cliId', '=', 'gntcliente.cliId')
+                ->leftJoin('gntformapago', 'vnttxn.fpId', '=', 'gntformapago.fpId') // Unir la tabla de forma de pago
                 ->select(
-                    'vntTxn.vntId',
-                    'vntTxn.vntNumero',
+                    'vnttxn.vntId',
+                    'vnttxn.vntNumero',
                     DB::raw('CONCAT(gntcliente.cliNombre, " ", gntcliente.cliApp, " ", gntcliente.cliApm) AS nombreCliente'),
-                    'vntTxn.vntFechaCreacion',
-                    DB::raw('SUM(CASE WHEN vnDetTxn.vndDescuento > 0 THEN vnDetTxn.vndDescuento * vnDetTxn.vndCantidad ELSE vnDetTxn.vndPrecioVenta * vnDetTxn.vndCantidad END) as totalVenta'),
-                    'gntFormaPago.fpnombre as FormaPago' // Utilizar el nombre de la forma de pago desde la tabla gntFormaPago
+                    'vnttxn.vntFechaCreacion',
+                    DB::raw('SUM(CASE WHEN vndettxn.vndDescuento > 0 THEN vndettxn.vndDescuento * vndettxn.vndCantidad ELSE vndettxn.vndPrecioVenta * vndettxn.vndCantidad END) as totalVenta'),
+                    'gntformapago.fpnombre as FormaPago' // Utilizar el nombre de la forma de pago desde la tabla gntformapago
                 )
-                ->leftJoin('vnDetTxn', 'vntTxn.vntId', '=', 'vnDetTxn.vntid')
-                ->where('vntTxn.vntCredito', 0) // Filtrar solo las ventas que no son a crédito
-                ->where('vntTxn.vntActivo', 1) // Filtrar solo las ventas activas
-                ->whereDate('vntTxn.vntFechaCreacion',now()->toDateString())
-                ->groupBy('vntTxn.vntId', 'vntTxn.vntNumero', 'gntcliente.cliNombre', 'gntcliente.cliApp', 'gntcliente.cliApm', 'vntTxn.vntFechaCreacion')
+                ->leftJoin('vndettxn', 'vnttxn.vntId', '=', 'vndettxn.vntid')
+                ->where('vnttxn.vntCredito', 0) // Filtrar solo las ventas que no son a crédito
+                ->where('vnttxn.vntActivo', 1) // Filtrar solo las ventas activas
+                ->whereDate('vnttxn.vntFechaCreacion', now()->toDateString())
+                ->groupBy('vnttxn.vntId', 'vnttxn.vntNumero', 'gntcliente.cliNombre', 'gntcliente.cliApp', 'gntcliente.cliApm', 'vnttxn.vntFechaCreacion')
                 ->orderBy('vntNumero', 'desc')
                 ->get();
 
@@ -219,25 +215,25 @@ class vntTxnController extends Controller
 
 
     public function Venta(Request $request)
-    {  
-      $dia=$request->dia;
+    {
+        $dia = $request->dia;
         try {
-            $ven = DB::table('vntTxn')
-                ->join('gntcliente', 'vntTxn.cliId', '=', 'gntcliente.cliId')
-                ->leftJoin('gntFormaPago', 'vntTxn.fpId', '=', 'gntFormaPago.fpId') // Unir la tabla de forma de pago
+            $ven = DB::table('vnttxn')
+                ->join('gntcliente', 'vnttxn.cliId', '=', 'gntcliente.cliId')
+                ->leftJoin('gntformapago', 'vnttxn.fpId', '=', 'gntformapago.fpId') // Unir la tabla de forma de pago
                 ->select(
-                    'vntTxn.vntId',
-                    'vntTxn.vntNumero',
+                    'vnttxn.vntId',
+                    'vnttxn.vntNumero',
                     DB::raw('CONCAT(gntcliente.cliNombre, " ", gntcliente.cliApp, " ", gntcliente.cliApm) AS nombreCliente'),
-                    'vntTxn.vntFechaCreacion',
-                    DB::raw('SUM(CASE WHEN vnDetTxn.vndDescuento > 0 THEN vnDetTxn.vndDescuento * vnDetTxn.vndCantidad ELSE vnDetTxn.vndPrecioVenta * vnDetTxn.vndCantidad END) as totalVenta'),
-                    'gntFormaPago.fpnombre as FormaPago' // Utilizar el nombre de la forma de pago desde la tabla gntFormaPago
+                    'vnttxn.vntFechaCreacion',
+                    DB::raw('SUM(CASE WHEN vndettxn.vndDescuento > 0 THEN vndettxn.vndDescuento * vndettxn.vndCantidad ELSE vndettxn.vndPrecioVenta * vndettxn.vndCantidad END) as totalVenta'),
+                    'gntformapago.fpnombre as FormaPago' // Utilizar el nombre de la forma de pago desde la tabla gntformapago
                 )
-                ->leftJoin('vnDetTxn', 'vntTxn.vntId', '=', 'vnDetTxn.vntid')
-                ->where('vntTxn.vntCredito', 0) // Filtrar solo las ventas que no son a crédito
-                ->where('vntTxn.vntActivo', 1) // Filtrar solo las ventas activas
-                ->whereDate('vntTxn.vntFechaCreacion',$dia)
-                ->groupBy('vntTxn.vntId', 'vntTxn.vntNumero', 'gntcliente.cliNombre', 'gntcliente.cliApp', 'gntcliente.cliApm', 'vntTxn.vntFechaCreacion')
+                ->leftJoin('vndettxn', 'vnttxn.vntId', '=', 'vndettxn.vntid')
+                ->where('vnttxn.vntCredito', 0) // Filtrar solo las ventas que no son a crédito
+                ->where('vnttxn.vntActivo', 1) // Filtrar solo las ventas activas
+                ->whereDate('vnttxn.vntFechaCreacion', $dia)
+                ->groupBy('vnttxn.vntId', 'vnttxn.vntNumero', 'gntcliente.cliNombre', 'gntcliente.cliApp', 'gntcliente.cliApm', 'vnttxn.vntFechaCreacion')
                 ->orderBy('vntNumero', 'asc')
                 ->get();
 
@@ -247,7 +243,35 @@ class vntTxnController extends Controller
         }
     }
 
+    public function detalleVenta(Request $request)
+    {
+        $vntNumero= $request->vntNumero;
+        try {
+            $resultado = DB::table('vnttxn')
+            ->join('vndettxn', 'vnttxn.vntId', '=', 'vndettxn.vntid')
+            ->join('intarticulo', 'vndettxn.artId', '=', 'intarticulo.artId')
+            ->join('gntcliente', 'vnttxn.cliId', '=', 'gntcliente.cliId')
+            ->select(
+                'gntcliente.cliNombre as nombre',
+                'gntcliente.cliApp as app',
+                'gntcliente.cliApm as apm',
+                'vnttxn.vntFechaCreacion',
+                'vntNumero',
+                'intarticulo.artNombre',
+                'vndettxn.vndCantidad',
+                'vndettxn.vndPrecioVenta',
+                'vndettxn.vndDescuento',
+                DB::raw('IF(vndettxn.vndDescuento = 0, (vndettxn.vndCantidad * vndettxn.vndPrecioVenta), (vndettxn.vndCantidad * vndettxn.vndDescuento)) as subtotal')
+            )
+            ->where('vntNumero', '=', $vntNumero)
+            ->where('vntActivo', '=', 1)
+            ->get();
+        return response()->json($resultado);
+        } catch (\Exception $e) {
+            return response()->json(['mensaje' => 'Error al obtener el Detalle de Venta: ' . $e->getMessage()], 500);
+        }
 
-  
 
+    
+    }
 }

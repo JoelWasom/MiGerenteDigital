@@ -49,7 +49,7 @@ class intArticuloController extends Controller
     public function CantidadCategoria(Request $request)
     {
 
-        $resultados = DB::table('intArticulo')
+        $resultados = DB::table('intarticulo')
             ->join('intcategoria', 'intarticulo.catId', '=', 'intcategoria.catId')
             ->select('intcategoria.catId', 'intcategoria.catNombre', DB::raw('COUNT(*) AS cantidad_productos'))
             ->where('intcategoria.catId', $request->txt_catId)
@@ -62,7 +62,7 @@ class intArticuloController extends Controller
     public function CantidadCategoria_todo()
     {
 
-        $resultados = DB::table('intArticulo')
+        $resultados = DB::table('intarticulo')
             ->join('intcategoria', 'intarticulo.catId', '=', 'intcategoria.catId')
             ->select('intcategoria.catId', 'intcategoria.catNombre', DB::raw('COUNT(*) AS cantidad_productos'))
             ->groupBy('intcategoria.catId', 'intcategoria.catNombre')

@@ -16,8 +16,8 @@ class InDetTxnController extends Controller
 
         DB::beginTransaction();
         try {
-            // Insertar datos en la tabla inDetTxn
-            $tablaInDetTxn = 'inDetTxn';
+            // Insertar datos en la tabla indettxn
+            $tablaInDetTxn = 'indettxn';
             DB::table($tablaInDetTxn)->insert([
                 'invId' => $detalle['invId'],
                 'artId' => $detalle['artId'],
@@ -38,8 +38,8 @@ class InDetTxnController extends Controller
 
         DB::beginTransaction();
         try {
-            // Insertar datos en la tabla inDetTxn
-            $tablaInDetTxn = 'inDetTxn';
+            // Insertar datos en la tabla indettxn
+            $tablaInDetTxn = 'indettxn';
             DB::table($tablaInDetTxn)->insert([
                 'invId' => $detalle['invId'],
                 'artId' => $detalle['artId'],

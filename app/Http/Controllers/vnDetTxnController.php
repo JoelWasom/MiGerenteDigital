@@ -37,7 +37,7 @@ class vnDetTxnController extends Controller
         ], $mensajesErrores);//llamada a los mensajes de Errores en caso de salte una validacion
         DB::beginTransaction();
         try {
-            $tabla = 'vnDetTxn';
+            $tabla = 'vndettxn';
             DB::table($tabla)->insert([
                 'vntid' => $datosValidados['vntid'],
                 'artId' => $datosValidados['artId'],

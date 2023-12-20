@@ -42,8 +42,8 @@ class CjtTxnController extends Controller
                 'ttxnId' => 'required|numeric',
             ], $mensajesErrores);
 
-            // Insertar el nuevo registro en la tabla cjtTxn
-            $tabla = "cjtTxn";
+            // Insertar el nuevo registro en la tabla cjttxn
+            $tabla = "cjttxn";
             $cjtId = DB::table($tabla)->insertGetId([
                 'cajId' => $datosValidados['cajId'],
                 'userId' => $datosValidados['userId'],
@@ -72,7 +72,7 @@ class CjtTxnController extends Controller
         $UsuarioId = $UsuarioId;
         DB::beginTransaction();
         try {
-            $tabla = 'cjtTxn';
+            $tabla = 'cjttxn';
             DB::table($tabla)
                 ->where('cjtReferencia', $Referncia)
                 ->update([

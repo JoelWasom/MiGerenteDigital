@@ -81,6 +81,7 @@ Route::group(['prefix' => 'auth'], function () {
   Route::get('ListaFormaPago', [vntTxnController::class, 'ListaFormaPago']);
   Route::post('InactiveVenta', [vntTxnController::class, 'InactiveVenta']);
   Route::post('Venta', [vntTxnController::class, 'Venta']);
+  Route::post('detalleVenta', [vntTxnController::class, 'detalleVenta']);
   
   // COMPRAS
   Route::get('GetAllShopping', [cmtxnController::class, 'GetAllShopping']);

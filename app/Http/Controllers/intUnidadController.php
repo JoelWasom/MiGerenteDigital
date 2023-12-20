@@ -18,7 +18,7 @@ class intUnidadController extends Controller
         try {
 
 
-            $unidadId = DB::table('intUnidad')->insertGetId([
+            $unidadId = DB::table('intunidad')->insertGetId([
                 'uniNombre' => $uniNombre,
                 'uniActivo' => 1,
                 'uniFechaCreacion' => now(),
@@ -36,7 +36,7 @@ class intUnidadController extends Controller
         $uniNombre =strtoupper($request->input('txt_uniNombre'));
         try {
 
-            DB::table('intUnidad')
+            DB::table('intunidad')
                 ->where('uniId', $uniId)
                 ->update([
                     'uniNombre' => $uniNombre,
@@ -50,7 +50,7 @@ class intUnidadController extends Controller
 
     public function listarUnidades()
     {
-        $unidades = DB::table('intUnidad')->where('uniActivo', 1)->get();
+        $unidades = DB::table('intunidad')->where('uniActivo', 1)->get();
 
         return response()->json($unidades, 200);
     }
@@ -58,7 +58,7 @@ class intUnidadController extends Controller
     {
 
         $id = $request->input('Id');
-        $unidad = DB::table('intUnidad')
+        $unidad = DB::table('intunidad')
         ->where('uniId', $id)
         ->Where('uniActivo',1)->get();
 

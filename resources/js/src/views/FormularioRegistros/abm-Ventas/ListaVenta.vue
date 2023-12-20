@@ -21,7 +21,6 @@
             <b-col md="9">
                 <b-overlay id="overlay-background" :variant="variant" :opacity="opacity" :blur="blur">
                     <b-card border-variant="info">
-                        <b-card-title style="text-align: center">Listado de Ventas</b-card-title>
                         <b-card-body>
                             <b-row>
                                 <b-col>
@@ -45,16 +44,12 @@
                                         :class="{ 'd-none': $store.state.app.isCrea }">
                                         Nuevo Registro
                                     </b-button>
-                                    <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'" :variant="$store.state.app.variant"
-                                        :class="$store.state.app.classButton" @click="CierreCaja()">
-                                        <feather-icon :icon="$store.state.app.botonIcono" class="mr-50" />
-                                        <span class="align-middle">Cerrar Caja </span>
+
+                                    <b-button variant="outline-primary" v-ripple.400="'rgba(255, 255, 255, 0.15)'" @click="CierreCaja()">
+                                        <feather-icon icon="BookIcon" class="mr-50" />
+                                        Cerrar Caja
                                     </b-button>
-                                    <!-- Boton de Imprimir PDF -->
-                                    <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'" variant="warning" class="btn-icon"
-                                        @click="generarPDF()">
-                                        <feather-icon icon="ArchiveIcon" />
-                                    </b-button>
+
                                 </b-col>
                                 <b-col sm="8" md="7" xl="6" lg="6">
                                     <b-form-group label-for="filter-input">
@@ -74,7 +69,7 @@
                                     <!-- Tabla --> <!-- Listado -->
                                     <b-table id="tabla-lista-ventas" :items="items" :fields="fields" :filter="filter"
                                         @filtered="onFiltered" hover :bordered="true" :busy="isBusy" outlined stacked="lg"
-                                        small  :style="{ fontSize: fontSize }" :sticky-header="stickyHeader">
+                                        small :style="{ fontSize: fontSize }" :sticky-header="stickyHeader">
                                         <template #cell(artCantidad)="data">
                                             <div class="d-flex align-items-center">
                                                 <b-form-input id="txtCantidad" placeholder="Cantidad" class="small-input"
@@ -84,7 +79,7 @@
                                         </template>
                                         <template #cell(Acción)="row">
                                             <b-row>
-                                                
+
                                                 <b-col>
                                                     <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'"
                                                         variant="flat-success" v-b-tooltip.hover.v-dark title="Ver Detalle"
@@ -120,21 +115,51 @@
                 </b-overlay>
             </b-col>
             <b-col md="3">
-                <b-card border-variant="info">
+                <b-row>
+                    <b-col>
+                        <b-card border-variant="info">
+                            <b-card-body>
+                                Ventas Contado :{{ totalVentaSum }}
+                            </b-card-body>
+                        </b-card>
+                    </b-col>
+                </b-row>
+                <b-row>
+                    <b-col>
+                        <b-row class="align-items-center">
+                            <b-col md="9">
+                                <h5 class="font-weight-bold">
+                                    Fecha Reporte
+                                </h5>
+                            </b-col>
+                            <b-col md="3"  class="d-flex justify-content-end">
+                                <!-- Boton de Imprimir PDF -->
+                                <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'" pill variant="outline-dark"
+                                    class="btn-icon" @click="generarPDF()">
+                                    <feather-icon icon="PrinterIcon" />
+                                </b-button>
+                            </b-col>
+                        </b-row>
+                    </b-col>
+                </b-row>
+                <b-row>
+                    <b-col>
+                        <b-form-group>
 
-                    <b-card-body>
-                        Ventas Contado :{{ totalVentaSum }}
-                    </b-card-body>
-                </b-card>
-                <b-form-group>
-                    <h5 class="font-weight-bold">
-                        Fecha Reporte
-                    </h5>
-                    <flat-pickr v-model="dateDefault" class="form-control" />
-                </b-form-group>
-                <div id="pdfIframeContainer">
-                    <iframe id="pdfIframe"  width="100%" height="300"></iframe>
-                </div>
+                            <flat-pickr v-model="dateDefault" class="form-control" />
+                        </b-form-group>
+                    </b-col>
+                </b-row>
+                <b-row>
+                    <b-col>
+                        <div id="pdfIframeContainer">
+                            <iframe id="pdfIframe" width="100%" height="300"></iframe>
+                        </div>
+                    </b-col>
+
+                </b-row>
+
+
             </b-col>
 
         </b-row>
@@ -236,6 +261,8 @@ export default {
     },
     data() {
         return {
+            nVenta: 0,
+            cliente: "",
             fontSize: "",
             dateDefault: null,
             txtCantidad: 0,
@@ -267,7 +294,7 @@ export default {
                 { key: "FormaPago", label: "Forma de Pago", sortable: true },
                 { key: "Acción", sortable: false },
             ],
-
+            itemDetalle: [],
             show: false,
             variant: "dark",
             opacity: 0.85,
@@ -308,7 +335,147 @@ export default {
     },
     methods: {
 
+
+        async detalleVenta(vntNumero) {
+
+            try {
+                let me = this;
+                const lista = [];
+                me.itemDetalle = []
+                const formData = new FormData();
+                formData.append("vntNumero", vntNumero);
+                const response = await this.$http.post("detalleVenta", formData);
+                const resp = response.data;
+                for (let i = 0; i < resp.length; i++) {
+                    lista.push({
+                        "nombre": resp[i].nombre,
+                        "app": resp[i].app,
+                        "apm": resp[i].apm,
+                        "vntFechaCreacion": resp[i].vntFechaCreacion,
+                        "vntNumero": resp[i].vntNumero,
+                        "artNombre": resp[i].artNombre,
+                        "vndCantidad": resp[i].vndCantidad,
+                        "vndPrecioVenta": resp[i].vndPrecioVenta,
+                        "vndDescuento": resp[i].vndDescuento,
+                        "subtotal": resp[i].subtotal,
+                    });
+                }
+                me.itemDetalle = lista;
+
+                this.generatePDF_Detalle(this.itemDetalle);
+            } catch (error) {
+                console.log(error.message);
+                this.UsuarioAlerta("error", error.response);
+                this.showOverlay = false;
+            }
+        },
+        generatePDF_Detalle(Articulo) {
+            try {
+
+                const doc = new jsPDF();
+                let me = this;
+
+                // Agregar el logo de la empresa (reemplaza 'ruta_al_logo' con la ruta de tu imagen)
+                const image = new Image();
+                var imgData = 'data:image/png;base64,' + me.$store.state.app.LogoEmpresa;
+                doc.addImage(imgData, 'PNG', 15, 5, 25, 25);
+                doc.setFont('helvetica', 'neue')
+                doc.setFontSize(8);
+                // doc.text(me.$store.state.app.NombreEmpresa, 40, 20);
+                doc.text('DIRECCION : ' + me.$store.state.app.DireccionEmpresa, 40, 20);
+                doc.text('TELEFONO  : ' + me.$store.state.app.TelefonoEmpresa, 40, 25);
+                doc.text('Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
+                const currentDate = new Date(); // Obtiene la fecha actual
+                const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                const formattedDate = currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
+
+                // Configuración de la nota de venta
+                const notaDeVenta = {
+                    numero: Articulo[0]["vntNumero"],
+                    fecha: formattedDate,
+                    cliente: me.cliente,
+
+                };
+
+
+                // Datos de los productos
+                const columns = ['Articulo', 'Cantidad', 'PrecioUnitario', 'Descuento', 'SubTotal'];
+                const rows = Articulo.map((producto) => {
+                    const precioOriginal = parseFloat(producto.vndPrecioVenta);
+                    const precioUnitario = producto.vndDescuento ? parseFloat(producto.vndDescuento) : precioOriginal;
+                    const subtotal = precioUnitario * parseFloat(producto.vndCantidad);
+
+                    return [
+                        producto.artNombre || '',
+                        producto.vndCantidad || 0,
+                        precioOriginal.toFixed(2), // Mostrar el precio original en la columna 'Precio'
+                        producto.vndDescuento || 0,
+                        producto.subtotal
+                    ];
+                });
+
+                // Agregar el encabezado de la nota de venta
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'neue');
+                doc.text('Nota de Venta', 135, 10);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'neue');
+
+                doc.text('N°:', 135, 20);
+                // doc.setTextColor(110, 107, 123);
+                doc.text(`${notaDeVenta.numero}`, 145, 20);
+                doc.setTextColor(0);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`Fecha: ${notaDeVenta.fecha}`, 135, 28);
+                doc.setFont('helvetica', 'neue');
+                // doc.setTextColor(0);
+                doc.text("Cliente:", 15, 52);
+                // doc.setTextColor(100);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`${notaDeVenta.cliente}`, 35, 52);
+                const columnStyles = {
+                    0: { halign: 'text-left' }, // Alineación centrada para la primera columna
+                    1: { halign: 'center' }, // Alineación centrada para la segunda columna
+                    2: { halign: 'center' }, // Alineación centrada para la tercera columna
+                    3: { halign: 'center' }, // Alineación centrada para la cuarta columna
+                    4: { halign: 'center' }, // Alineación centrada para la quinta columna
+                };
+                // Agregar la tabla de productos
+                doc.autoTable({
+                    startY: 60,
+                    head: [columns],
+                    body: rows,
+                    columnStyles: columnStyles,
+                });
+
+
+                // Calcular el total
+                // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
+                const total = Articulo.reduce((acc, producto) => {
+                    const precioUnitario = producto.subtotal;
+                    const subtotal =  producto.subtotal++;
+                    return acc + subtotal;
+                }, 0);
+                doc.setFont('helvetica', 'neue');
+                doc.text(`Total Bs.:`, 145, doc.autoTable.previous.finalY + 10);
+                doc.text(`${total.toFixed(2)}`, 175, doc.autoTable.previous.finalY + 10);
+
+                doc.setFont('times', 'normal');
+                doc.setFontSize(12);
+
+                // Guardar el documento PDF como un Data URI
+                const dataUri = doc.output('datauristring');
+
+                // Abrir el PDF en una nueva ventana o pestaña
+                const newWindow = window.open();
+                newWindow.document.write('<iframe width="100%" height="100%" src="' + dataUri + '"></iframe');
+            } catch (error) {
+                me.UsuarioAlerta("error", "Error al generar el PDF: " + error.message);
+            }
+        }
+        ,
         generarPDF() {
+
             const doc = new jsPDF();
             let me = this;
 
@@ -391,8 +558,9 @@ export default {
             // Abrir el PDF en una nueva ventana
             // const newWindow = window.open();
             // newWindow.document.write('<iframe width="100%" height="100%" src="' + dataUri + '"></iframe');
-        }
-        ,
+        },
+
+
         //Metodos Estandar
         clickAccion(item, accion) {
 
@@ -408,13 +576,14 @@ export default {
                 this.$store.dispatch('app/cambiaId', item["artId"])
                 this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'primary', icono: 'SaveIcon', texto: 'Modificar', Bclass: '' })
 
-                this.$refs["frm-articulo"].show();
+                // this.$refs["frm-articulo"].show();
             }
             if (accion === "ver") {
                 this.$store.dispatch('app/cambiaId', item["artId"])
                 this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'success', icono: 'SaveIcon', texto: 'Guardar', Bclass: 'd-none' })
-
-                this.$refs["frm-articulo"].show();
+                //llamar a la funcion que traera el detall 
+                this.detalleVenta(item["vntNumero"])
+                // this.$refs["frm-articulo"].show();
             }
             if (accion === "eliminar") {
                 this.ControlaEliminar(item)
@@ -645,12 +814,10 @@ export default {
                 })
                 .catch((e) => {
                     alert("Error al obtener los datos de ventas realizadas: " + e);
+                    this.UsuarioAlerta("error", e.message.data.error);
+
                 });
         },
-
-
-
-
         VerificarAperturaCaja() {
             let me = this;
 

@@ -14,10 +14,11 @@ class cjACController extends Controller
         $cajId = $request->cajId;
         try {
             // Verificar si existe un registro de apertura de caja para el usuario y la caja en el día actual
-            $aperturaCajaExistente = DB::table('cjAperturaCierre')
+            $aperturaCajaExistente = DB::table('cjaperturacierre')
                 ->where('cajId', $cajId)
                 ->whereDate('acFechaApertura', now()->toDateString())
                 ->first();
+                
             if ($aperturaCajaExistente == null) {
                 if ($cajId == '1') {
                     return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'], 201);
@@ -58,7 +59,7 @@ class cjACController extends Controller
 
 
             //Verificar  si existe una caja sin cerra en fechas pasadas 
-            $cajaSinCerrar = DB::table("cjAperturaCierre")
+            $cajaSinCerrar = DB::table("cjaperturacierre")
                 ->where('cajId', $datosValidados['cajId'])
                 ->whereNull('acFechaCierre')
                 ->first();
@@ -71,7 +72,7 @@ class cjACController extends Controller
 
 
             // Verificar si ya se abrió la caja en el mismo día
-            $cajaAbiertaHoy = DB::table('cjAperturaCierre')
+            $cajaAbiertaHoy = DB::table('cjaperturacierre')
                 ->where('cajId', $datosValidados['cajId'])
                 // ->where('userId', $datosValidados['userId'])//quitar esto ya que todo ingreso Hira a una mis caja
                 ->whereDate('acFechaApertura', now()->toDateString())
@@ -82,8 +83,8 @@ class cjACController extends Controller
 
 
             DB::beginTransaction();
-            // Insertar el nuevo registro en la tabla cjAperturaCierre
-            $acId = DB::table('cjAperturaCierre')->insertGetId([
+            // Insertar el nuevo registro en la tabla cjaperturacierre
+            $acId = DB::table('cjaperturacierre')->insertGetId([
                 'cajId' => $datosValidados['cajId'],
                 'userId' => $datosValidados['userId'],
                 'acMontoApertura' => $datosValidados['acMontoApertura'],
@@ -95,7 +96,7 @@ class cjACController extends Controller
 
             // Agregar el registro en la tabla bitácora
             $bitacora = new bitacoraController();
-            $bitacora->insertarBitacora('cjAperturaCierre', $acId, $datosValidados['userId'], 'Nueva Apertura de Caja', 'Se ha registrado una nueva apertura de caja con ID: ' . $acId);
+            $bitacora->insertarBitacora('cjaperturacierre', $acId, $datosValidados['userId'], 'Nueva Apertura de Caja', 'Se ha registrado una nueva apertura de caja con ID: ' . $acId);
             DB::commit();
             // Retornar una respuesta de éxito
             return response()->json(['mensaje' => 'Apertura de caja registrada exitosamente'], 201);
@@ -127,7 +128,7 @@ class cjACController extends Controller
 
 
             // Verificar si existe un registro de cierre activo para esta caja en la fecha actual
-            $registroCierre = DB::table('cjAperturaCierre')
+            $registroCierre = DB::table('cjaperturacierre')
                 ->where('cajId', $datosValidados['cajId'])
                 ->whereNotNull('acFechaApertura')
                 ->whereNull('acFechaCierre')
@@ -149,8 +150,8 @@ class cjACController extends Controller
             // Calcular el monto de cierre sumando el monto de apertura y las ventas
             $montoCierre = $ventas->totalVenta;
 
-            // Actualizar el registro de cierre de caja en la tabla cjAperturaCierre
-            DB::table('cjAperturaCierre')
+            // Actualizar el registro de cierre de caja en la tabla cjaperturacierre
+            DB::table('cjaperturacierre')
                 ->where('acId', $registroCierre->acId)
                 ->where('cajId', $datosValidados['cajId'])
                 ->where('acActivo', 1)
@@ -162,7 +163,7 @@ class cjACController extends Controller
 
             // Agregar el registro en la tabla bitácora
             $bitacora = new bitacoraController();
-            $bitacora->insertarBitacora('cjAperturaCierre', $datosValidados['cajId'], $datosValidados['userId'], 'Cierre de Caja', 'Se ha realizado el cierre de caja para la caja con ID: ' . $datosValidados['cajId']);
+            $bitacora->insertarBitacora('cjaperturacierre', $datosValidados['cajId'], $datosValidados['userId'], 'Cierre de Caja', 'Se ha realizado el cierre de caja para la caja con ID: ' . $datosValidados['cajId']);
 
             DB::commit();
 
@@ -177,9 +178,9 @@ class cjACController extends Controller
     public function obtenerAperturasCaja()
     {
         try {
-            $aperturasCaja = DB::table('cjAperturaCierre AS ac')
+            $aperturasCaja = DB::table('cjaperturacierre AS ac')
                 ->select('ac.*', 'caj.cajNombre AS nombre_caja', 'usr.name AS nombre_usuario')
-                ->join('cjCaja AS caj', 'ac.cajId', '=', 'caj.cajId')
+                ->join('cjcaja AS caj', 'ac.cajId', '=', 'caj.cajId')
                 ->join('users AS usr', 'ac.userId', '=', 'usr.Id')
                 ->where('ac.acActivo', 1)
                 ->get();
@@ -195,7 +196,7 @@ class cjACController extends Controller
         try {
             $montoCompras = DB::table('cjttxn')
                 ->join('cjcaja', 'cjcaja.cajId', '=', 'cjttxn.cajId')
-                ->join('cjAperturaCierre', 'cjAperturaCierre.cajId', '=', 'cjcaja.cajId')
+                ->join('cjaperturacierre', 'cjaperturacierre.cajId', '=', 'cjcaja.cajId')
                 ->whereRaw('cjcaja.`cajId`=2 and cjttxn.`cjtActivo`=1 and cjaperturacierre.`acActivo`=1 and cjttxn.`cjtFechaTransaccion` >= cjaperturacierre.`acFechaApertura`')
                 ->sum('cjttxn.cjtMonto');
             return $montoCompras;
@@ -207,8 +208,8 @@ class cjACController extends Controller
     public function GetBalanceShopping()
     {
         try {
-            $montoAperturaCajaComprasActual = DB::table('cjAperturaCierre AS ac')
-                ->join('cjCaja AS caj', 'ac.cajId', '=', 'caj.cajId')
+            $montoAperturaCajaComprasActual = DB::table('cjaperturacierre AS ac')
+                ->join('cjcaja AS caj', 'ac.cajId', '=', 'caj.cajId')
                 ->whereRaw('caj.`cajId`=2 AND ac.`acActivo`=1 and ac.`acMontoApertura`>0 and ac.`acMontoCierre`=0')
                 ->value('ac.acMontoApertura');
 
@@ -224,8 +225,8 @@ class cjACController extends Controller
     {
         try {
             // Verificar si existe un registro de apertura de caja para el usuario y la caja en el día actual
-            $aperturaCajaExistente = DB::table('cjAperturaCierre AS ac')
-                ->join('cjCaja AS caj', 'ac.cajId', '=', 'caj.cajId')
+            $aperturaCajaExistente = DB::table('cjaperturacierre AS ac')
+                ->join('cjcaja AS caj', 'ac.cajId', '=', 'caj.cajId')
                 ->whereRaw('caj.`cajId`=2 AND ac.`acActivo`=1 and ac.`acMontoApertura`>0 and ac.`acMontoCierre`=0')
                 ->first();
             if ($aperturaCajaExistente == null) {
