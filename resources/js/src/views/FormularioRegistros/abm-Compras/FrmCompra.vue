@@ -121,9 +121,19 @@
                             <b-row>
                                 <b-col>
                                     <!-- Tabla --> <!-- Listado -->
-                                    <b-table id="tabla-lista-detalle" :items="itemsAgregado" :fields="fieldsAgregado"
-                                        :filter="filter" @filtered="onFiltered" hover :busy="isBusy" :bordered="true"
-                                        :fixed="true" :sticky-header="stickyHeader" :head-variant="headVariant">
+                                    <b-table id="tabla-lista-detalle"
+                                     :items="itemsAgregado" 
+                                     :fields="fieldsAgregado"
+                                     :filter="filter" 
+                                     @filtered="onFiltered" 
+                                     hover 
+                                     :busy="isBusy" 
+                                     :bordered="true"
+                                     outlined 
+                                     stacked="sm"  
+                                     small
+                                    :style="{ fontSize: fontSize }"
+                                                >
                                         <template #cell(precioC)="row">
                                             <b-form-input v-model="row.value" type="number" min="0"
                                                 @input="actualizarSubtotal(row.item, row.value)" ref="PrecioInput"
@@ -321,6 +331,12 @@ export default {
         this.cbxArticulo()
         this.cbxFormaPago()
         this.cbxProveedor()
+
+        const movil = window.innerWidth;
+        if (movil <= 576) {
+      // Dispositivo móvil pequeño
+        this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
+    }
         if (this.$store.state.app.TipoAccion === "editar" || this.$store.state.app.TipoAccion === "ver") {
             this.GetShoppingById()
         }

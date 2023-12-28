@@ -81,14 +81,25 @@
 
             </b-col>
           </b-row>
+
+          
           <b-row>
             <b-col>
-              <!-- Listado -->
+              <!-- Listado --> 
 
               <b-row>
                 <b-col xs="12" sm="12" md="12" xl="12" lg="12">
-                  <b-table id="tabla-lista-roles" :items="itemRol" :fields="fieldsRol" :filter="filter"
-                    @filtered="onFiltered" hover :bordered="true" :busy="isBusy" outlined stacked="sm" small
+                  <b-table 
+                  id="tabla-lista-roles" 
+                  :items="itemRol" 
+                  :fields="fieldsRol" 
+                  :filter="filter"
+                    @filtered="onFiltered" hover 
+                    :bordered="true" 
+                    :busy="isBusy" 
+                    outlined 
+                    stacked="sm" 
+                    small
                     :style="{ fontSize: fontSize }">
                     <template #cell(accion)="row">
                       <b-button v-ripple.400="'rgba(234, 84, 85, 0.15)'" variant="flat-danger"
@@ -274,8 +285,8 @@ export default {
   mounted() {
 
     this.ListaRoles();
-    const a = window.innerWidth;
-    if (a <= 576) {
+    const movil = window.innerWidth;
+    if (movil <= 576) {
       // Dispositivo móvil pequeño
       this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
     }

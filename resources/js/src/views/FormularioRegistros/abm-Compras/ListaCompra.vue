@@ -55,9 +55,19 @@
                             <b-row>
                                 <b-col>
                                     <!-- Tabla --> <!-- Listado -->
-                                    <b-table id="tabla-lista-compras" :items="items" :fields="fields" :filter="filter"
-                                        @filtered="onFiltered" hover responsive="sm" :busy="isBusy" outlined
-                                        :sticky-header="stickyHeader">
+                                    <b-table id="tabla-lista-compras" 
+                                    :items="items" 
+                                    :fields="fields" 
+                                    :filter="filter"
+                                    @filtered="onFiltered" 
+                                    hover 
+                                    :bordered="true" 
+                                    :busy="isBusy" 
+                                    outlined
+                                    stacked="sm"  
+                                    small
+                                    :style="{ fontSize: fontSize }"
+                                   >
                                         <template #cell(artCantidad)="data">
                                             <div class="d-flex align-items-center">
                                                 <b-form-input id="txtCantidad" placeholder="Cantidad" class="small-input"

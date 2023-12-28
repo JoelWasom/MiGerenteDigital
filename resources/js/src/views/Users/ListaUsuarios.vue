@@ -140,8 +140,19 @@
             <!-- Tabla -->
             <div>
               <!-- Listado -->
-              <b-table :items="items" :fields="fields" :filter="filter" @filtered="onFiltered" select-mode="single"
-                selectable striped hover responsive="sm" :busy="isBusy" outlined>
+              <b-table 
+              :items="items" 
+              :fields="fields" 
+              :filter="filter" 
+              @filtered="onFiltered" 
+              hover 
+              :bordered="true" 
+              :busy="isBusy" 
+              outlined 
+              stacked="sm"  
+              small
+              :style="{ fontSize: fontSize }"
+              >
                 <!-- AQUI SE CONTROLA ID DE USUARIOS -->
                 <template #cell(Ver_detalle)="row">
                   <b-form-checkbox v-model="row.detailsShowing" plain class="vs-checkbox-con" @change="row.toggleDetails">
@@ -293,6 +304,7 @@ export default {
   },
   data() {
     return {
+      fontSize: "",
       pIdperfil: "",
       idUsuario: 0,
       nombre: "",
@@ -371,6 +383,12 @@ export default {
   mounted() {
     this.listaUsuario();
     this.cbxPerfil()
+    const movil = window.innerWidth;
+    if (movil <= 576) {
+      // Dispositivo móvil pequeño
+      this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
+    }
+
   },
   methods: {
     asignarPermisos(item) {
@@ -562,7 +580,7 @@ export default {
             alert(e);
           });
       }
-      else{
+      else {
         me.success("danger")
       }
 

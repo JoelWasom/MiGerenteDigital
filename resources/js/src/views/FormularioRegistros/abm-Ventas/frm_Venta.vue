@@ -86,7 +86,7 @@
                     <b-col>
                         <b-card border-variant="info">
                             <b-row>
-                                <b-col>
+                                <b-col >
                                     <b-form-group>
                                         <label class="d-inline d-lg-flex">Buscar Producto</label>
                                         <v-select ref="selectedProductos" v-model="selectedProductos"
@@ -113,9 +113,19 @@
                             <b-row>
                                 <b-col>
                                     <!-- Tabla --> <!-- Listado -->
-                                    <b-table id="tabla-lista-retrasos" :items="itemsAgregado" :fields="fieldsAgregado"
-                                        :filter="filter" @filtered="onFiltered" hover :busy="isBusy" :bordered="true"
-                                        :fixed="true" :sticky-header="stickyHeader" :head-variant="headVariant">
+                                    <b-table id="tabla-lista-retrasos" 
+                                    :items="itemsAgregado" 
+                                    :fields="fieldsAgregado"
+                                    :filter="filter" 
+                                    @filtered="onFiltered" 
+                                    hover 
+                                    :busy="isBusy" 
+                                    :bordered="true"
+                                    outlined 
+                                    stacked="sm"  
+                                    small
+                                    :style="{ fontSize: fontSize }"
+                                   >
 
                                         <template #cell(cantidad)="row">
                                             <b-form-input v-model="row.value" type="number" min="1"
@@ -320,6 +330,13 @@ export default {
         this.cbxArticulo()
         this.cbxFormaPago()
         this.cbxCliente()
+
+        const movil = window.innerWidth;
+            if (movil <= 576) {
+            // Dispositivo móvil pequeño
+            this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
+            }
+
     },
     computed: {
 
