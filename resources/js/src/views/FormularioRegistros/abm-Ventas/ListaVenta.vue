@@ -37,21 +37,15 @@
                                 </b-col>
                             </b-row>
                             <b-row>
-                                <b-col sm="4" md="5" xl="6" lg="6" class="mb-1">
+                                <b-col sm="12" md="4" xl="6" lg="6" class="mb-1">
                                     <!-- Boton Modal -->
                                     <b-button v-ripple.400="'rgba(113, 102, 240, 0.15)'" v-b-modal.frm-ventas
                                         variant="success" @click="clickAccion('', 'guardar')"
                                         :class="{ 'd-none': $store.state.app.isCrea }">
                                         Nuevo Registro
                                     </b-button>
-
-                                    <b-button variant="outline-primary" v-ripple.400="'rgba(255, 255, 255, 0.15)'" @click="CierreCaja()">
-                                        <feather-icon icon="BookIcon" class="mr-50" />
-                                        Cerrar Caja
-                                    </b-button>
-
                                 </b-col>
-                                <b-col sm="8" md="7" xl="6" lg="6">
+                                <b-col sm="12" md="8" xl="6" lg="6">
                                     <b-form-group label-for="filter-input">
                                         <b-input-group>
                                             <b-form-input id="filter-input" v-model="filter" debounce="200" type="search"
@@ -132,7 +126,7 @@
                                     Fecha Reporte
                                 </h5>
                             </b-col>
-                            <b-col md="3"  class="d-flex justify-content-end">
+                            <b-col md="3" class="d-flex justify-content-end">
                                 <!-- Boton de Imprimir PDF -->
                                 <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'" pill variant="outline-dark"
                                     class="btn-icon" @click="generarPDF()">
@@ -387,8 +381,8 @@ export default {
                 doc.text('Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
                 const currentDate = new Date(); // Obtiene la fecha actual
                 const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                const formattedDate = currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
-
+                const formattedDate = Articulo[0]["vntFechaCreacion"] //currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
+                me.cliente = Articulo[0]["nombre"] + " " + Articulo[0]["app"]
                 // Configuración de la nota de venta
                 const notaDeVenta = {
                     numero: Articulo[0]["vntNumero"],
@@ -453,7 +447,7 @@ export default {
                 // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
                 const total = Articulo.reduce((acc, producto) => {
                     const precioUnitario = producto.subtotal;
-                    const subtotal =  producto.subtotal++;
+                    const subtotal = producto.subtotal++;
                     return acc + subtotal;
                 }, 0);
                 doc.setFont('helvetica', 'neue');
@@ -645,6 +639,11 @@ export default {
                     }
                 });
         },
+
+
+
+   
+
 
         eliminar(item) {
             let me = this;
@@ -845,6 +844,8 @@ export default {
                     me.UsuarioAlerta("error", e.response.data.error);
                 });
         },
+
+        //este metodo ya no se usa , El cierre se hace del el listado de cajas aperturadas
         CierreCaja() {
             let me = this;
 
@@ -871,6 +872,7 @@ export default {
                 })
                 .catch((e) => {
                     me.UsuarioAlerta("error", e.response.data.error);
+                    
                 });
         },
 

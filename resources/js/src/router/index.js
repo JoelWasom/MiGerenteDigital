@@ -197,7 +197,21 @@ const router = new VueRouter({
       },
     },
 
-
+    {
+      path: '/listado_cliente', 
+      name: 'listado_cliente',
+      component: () => import('@/views/FormularioRegistros/abm-Cliente/ListaCliente.vue'),
+      meta: {
+        pageTitle: 'Litado Cliente',
+        breadcrumb: [
+          {
+            text: 'Cliente',
+            active: false,
+          },
+        ],
+        redirectIfLoggedIn: false,
+      },
+    },
     {
       path: '/listado_proveedor', 
       name: 'listado_proveedor',

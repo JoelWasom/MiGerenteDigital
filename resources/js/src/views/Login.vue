@@ -198,20 +198,14 @@ export default {
       }
       return this.sideImg;
     },
-
-
-
   },
 
   setup() {
     localStorage.removeItem("idPerfil");
-
   },
   mounted() {
 
-
   },
-
   beforeDestroy() {
 
   },

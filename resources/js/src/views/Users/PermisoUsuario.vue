@@ -7,9 +7,20 @@
         <b-card-body>
           <div>
             <b-modal id="frm-perfil" ref="frm-perfil" ok-title="Guardar" ok-variant="success" :ok-disabled="ok"
-              cancel-variant="danger" cancel-title="Cancelar" centered title="Nuevo Registro" @ok="guardarPerfil"
+              cancel-variant="danger" cancel-title="Cancelar" centered title="Asiganción de Permiso" @ok="guardarPerfil"
               @cancel="limpiarVariables">
               <!-- Diseño del Formulario -->
+              <b-row>
+
+                <b-col>
+                  <b-alert style="height: 30px" v-height-fade.appear :show="dismissCountDown" dismissible class="mb-0"
+                    variant="success" @dismissed="dismissCountDown = 0" @dismiss-count-down="countDownChanged">
+                    <div class="alert-body">
+                      <span>Modificación Exitosa {{ dismissCountDown }}...</span>
+                    </div>
+                  </b-alert>
+                </b-col>
+              </b-row>
               <b-form>
                 <b-row>
                   <b-col>
@@ -19,8 +30,10 @@
                       :sticky-header="stickyHeader" ref="selectableTable">
                       <template #cell(cheked)="data">
                         <b-form-checkbox :checked="data.item.checked" v-model="data.item.checked"
-                          @change="ModifiarPerfil(data.item)" class="custom-control-success">
+                          @change="ModifiarPerfil(data.item)"
+                          :class="{ 'custom-control-success': data.item.checked, 'custom-control-danger': !data.item.checked }">
                         </b-form-checkbox>
+
                       </template>
                       <template #cell(Accion)="row">
 
@@ -43,43 +56,35 @@
               {{ Loading }}
             </b-modal>
           </div>
-         
-            <b-row >
-              <b-col sm="4" md="8" xl="6"   class="mb-1">
-                      <b-button v-ripple.400="'rgba(113, 102, 240, 0.15)'" v-b-modal.frm-perfil variant="success">
-                        Nuevo Registro
-                      </b-button>
-              </b-col>
-              <b-col  sm="8" md="4" xl="6"   class="mb-1">
-                
-                    <b-form-group label-for="filter-input" label-align-sm="left" label-size="sm"
-                      class="mb-0">
-                      <b-input-group size="sm">
-                        <b-form-input id="filter-input" v-model="filter" type="search"
-                          placeholder="Texto Para Buscar"></b-form-input>
 
-                        <b-input-group-append>
-                          <b-button :disabled="!filter" variant="danger" @click="filter = ''">Clear</b-button>
-                        </b-input-group-append>
-                      </b-input-group>
-                    </b-form-group>
-                
-              </b-col>
-            </b-row>
+
+
+
+          <b-row>
+            <b-col sm="4" md="8" xl="6" class="mb-1">
+              <b-button v-ripple.400="'rgba(113, 102, 240, 0.15)'" v-b-modal.frm-perfil variant="success">
+                Nuevo Registro
+              </b-button>
+            </b-col>
+            <b-col sm="8" md="4" xl="6" class="mb-1">
+
+              <b-form-group label-for="filter-input" label-align-sm="left" label-size="sm" class="mb-0">
+                <b-input-group size="sm">
+                  <b-form-input id="filter-input" v-model="filter" type="search"
+                    placeholder="Texto Para Buscar"></b-form-input>
+
+                  <b-input-group-append>
+                    <b-button :disabled="!filter" variant="danger" @click="filter = ''">Clear</b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </b-form-group>
+
+            </b-col>
+          </b-row>
           <b-row>
             <b-col>
               <!-- Listado -->
-              <b-row>
 
-                <b-col>
-                  <b-alert style="height: 30px" v-height-fade.appear :show="dismissCountDown" dismissible class="mb-0"
-                    variant="success" @dismissed="dismissCountDown = 0" @dismiss-count-down="countDownChanged">
-                    <div class="alert-body">
-                      <span>Modificación Exitosa {{ dismissCountDown }}...</span>
-                    </div>
-                  </b-alert>
-                </b-col>
-              </b-row>
               <b-row>
                 <b-col xs="12" sm="12" md="12" xl="12" lg="12">
                   <b-table id="tabla-lista-roles" :items="itemRol" :fields="fieldsRol" :filter="filter"
@@ -91,7 +96,7 @@
                         <feather-icon icon="LockIcon" />
                       </b-button>
                       <b-button v-ripple.400="'rgba(234, 84, 85, 0.15)'" variant="flat-info"
-                        class="btn-icon rounded-circle" @click="validarClick2((click = '2'))">
+                        class="btn-icon rounded-circle" @click="validarClick2(row.item, ('2'))">
                         <feather-icon icon="EditIcon" />
                       </b-button>
                     </template>
@@ -196,7 +201,7 @@ export default {
   },
   data() {
     return {
-      dismissSecs: 1,
+      dismissSecs: 2,
       dismissCountDown: 0,
 
       stickyHeader: true,
@@ -267,14 +272,14 @@ export default {
     },
   },
   mounted() {
-    this.ListaPaginas();
+
     this.ListaRoles();
     const a = window.innerWidth;
     if (a <= 576) {
       // Dispositivo móvil pequeño
       this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
     }
- 
+
     // this.GenerarId();
     // alert(this.$store.state.app.msg)
   },
@@ -295,14 +300,21 @@ export default {
       me.pidperfil = me.selectedPerfil;
       // me.idmenu = item[0]["id"];
       const params = new URLSearchParams();
+      var chek = 0
 
       me.items = [];
-      var urlm = "api/auth/ModificaPerfil";
+      var urlm = "api/auth/ModificaAcceso";
       me.loaded = false;
       // me.isBusy = true;
-      params.append("id_detalle_perfil", item.id);
-      params.append("checked", item.checked);
-      // params.append("idusuario", this.$store.state.app.msg)
+      params.append("idacceso", item["id"]);
+
+      if (item["checked"] === true) {
+        chek = 1
+      } else {
+        chek = 0
+      }
+      params.append("checked", chek);
+
       axios
         .post(urlm, params)
         .then(function (response) {
@@ -311,15 +323,15 @@ export default {
             me.show = false;
             me.showAlert();
             // me.success("success");
+            // me.UsuarioAlerta("success", response.data.mensaje)
             me.isBusy = false;
             // me.ListaPaginas();
-            me.dataGestion();
-          } else {
-            // me.success("danger");
+
           }
         })
         .catch((e) => {
-          alert("No se Modifico el acceso " + e);
+          // alert("No se Modifico el acceso " + e);
+          me.UsuarioAlerta("error" + e.response.data.error)
         });
       me.limpiarVariables();
     },
@@ -361,8 +373,8 @@ export default {
         .post(url, params)
         .then(function (response) {
           if (response.status === 200) {
-            me.makeToast("success");
 
+            me.UsuarioAlerta("success", "Eliminación Exitosa")
             me.isBusy = false;
             me.ListaNps();
           }
@@ -387,24 +399,7 @@ export default {
       me.iExiste = 0;
       me.estado = "";
     },
-    makeToast(variant) {
-      let me = this;
-      if (variant === "success") {
-        this.$bvToast.toast("Registro Exitoso ", {
-          title: `HR Analytics`,
-          variant,
-          solid: true,
-          appendToast: true,
-        });
-      } else {
-        this.$bvToast.toast("Error en el Registro ", {
-          title: `HR Analytics`,
-          variant,
-          solid: true,
-          appendToast: true,
-        });
-      }
-    },
+
     //Listas
     ListaPaginas() {
       let me = this;
@@ -413,19 +408,27 @@ export default {
       // params.append('email', me.email);
       me.itemMenu = [];
       me.isBusy = true;
-      var url = "api/auth/menu?idperfil=" + me.selectedPerfil;
+      var url = "api/auth/menu?idperfil=" + this.$store.state.app.idRolSelecionado;
       me.loaded = false;
       var lista = [];
       axios
+
         .get(url)
         .then(function (response) {
           var resp = response.data;
           for (let i = 0; i < resp.length; i++) {
+            var estado = false
+            if (resp[i].checked === 1) {
+              estado = true
+            } else {
+              estado = false
+            }
+
             lista.push({
               id: resp[i].idacceso,
               Menu: resp[i].nombre_menu,
               submenu: resp[i].nombre_submenu,
-              checked: resp[i].checked,
+              checked: estado,
             });
           }
           me.itemMenu = lista;
@@ -433,14 +436,15 @@ export default {
           me.loaded = true;
         })
         .catch((e) => {
-          alert("error al obtener los datos Lista Menu" + e);
+          // alert("error al obtener los datos Lista Menu" + e);
+          this.UsuarioAlerta("error", e.response.data.error);
         });
-    }, validarClick2(click) {
+    },
+    validarClick2(item, click) {
       if (click === "2") {
 
-        // this.$store.state.app.idListadoGeneral = item["id"];
-        // this.$store.state.app.classButtonGuardar = ""
-        // this.$store.state.app.classButtonModificar = "d-none"
+        this.$store.dispatch('app/cambia_idRolSelecionado', item["id"])
+        this.ListaPaginas()
         this.$refs["frm-perfil"].show();
       }
     },
@@ -564,11 +568,8 @@ export default {
         });
       me.limpiarVariables();
     },
-    asignarMenus(item) {
-      let me = this;
-      me.menu = item;
-    },
-    Guardar() {
+
+    Guardar(item) {
       let me = this;
       me.show = true;
       const hoy = new Date();
@@ -581,12 +582,10 @@ export default {
         const params = new URLSearchParams();
 
         me.items = [];
-        var urlm = "api/auth/guardaDetallePerfil";
+        var urlm = "api/auth/ModificaAcceso";
         me.loaded = false;
         me.isBusy = true;
-        params.append("idperfil", me.pidperfil);
-        params.append("idmenu", me.idmenu);
-        params.append("idusuario", this.$store.state.app.msg); //this.$store.state.app.msg
+        params.append("idacceso", item["id"]);
         axios
           .post(urlm, params)
           .then(function (response) {
@@ -606,6 +605,41 @@ export default {
 
         // me.limpiarVariables();
       }
+    },
+
+
+
+    UsuarioAlerta(variant, msj) {
+      let title, confirmButtonClass, showClass;
+
+      if (variant === "success") {
+        title = "Buen Trabajo";
+        confirmButtonClass = "btn btn-success";
+        showClass = "animate__animated animate__bounceIn";
+      } else if (variant === "error") {
+        title = "¡Error!";
+        confirmButtonClass = "btn btn-danger";
+        showClass = "btn btn-danger animate__animated animate__rubberBand";
+      } else if (variant === "warning") {
+        title = "Precaución";
+        confirmButtonClass = "btn btn-warning";
+        showClass = "animate__animated animate__wobble";
+      } else {
+        // Puedes agregar más casos según tus necesidades.
+      }
+
+      this.$swal({
+        title: title,
+        text: msj,
+        icon: variant,
+        customClass: {
+          confirmButton: confirmButtonClass,
+        },
+        showClass: {
+          confirmButton: showClass,
+        },
+        buttonsStyling: true,
+      });
     },
     success(variant) {
       // window.swal = require('sweetalert2')

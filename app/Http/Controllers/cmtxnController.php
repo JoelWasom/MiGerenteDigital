@@ -24,7 +24,7 @@ class cmtxnController extends Controller
                 'cmtxn.cmtNumero',
                 DB::raw('CONCAT(gntproveedor.provNombre, " ", gntproveedor.provTelefono) AS nombreProveedor'),
                 'cmtxn.cmtFechaCreacion',
-                DB::raw('SUM(cmdettxn.cmdCantidad * cmdettxn.cmdCosto) as totalCompras')
+                DB::raw('CEIL(SUM(cmdettxn.cmdCantidad * cmdettxn.cmdCosto)) as totalCompras')
             )
             ->where('cmtxn.cmtActivo', 1)
             ->where('cmdettxn.cmdActivo', 1)

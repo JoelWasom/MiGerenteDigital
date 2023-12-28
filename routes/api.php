@@ -44,9 +44,10 @@ Route::group(['prefix' => 'auth'], function () {
   Route::get('usuarioResponsable', [AuthController::class, 'usuarioResponsable']);
   Route::post('ModificaUsuario', [AuthController::class, 'ModificaUsuario']);
   Route::post('ModificaUsuarioPerfil', [AuthController::class, 'ModificaUsuarioPerfil']);
-  Route::post('ModificaPerfil', [AuthController::class, 'ModificaPerfil']);
+  // Route::post('ModificaPerfil', [AuthController::class, 'ModificaPerfil']);
   Route::post('AccesoMenu', [AuthController::class, 'AccesoMenu']);
   Route::post('PermisoOperacion', [AuthController::class, 'PermisoOperacion']);
+  Route::post('ModificaAcceso', [AuthController::class, 'ModificaAcceso']);
 
   Route::post('Solicitapass', [AuthController::class, 'Solicitapass']);
   Route::get('DatosEmpresa', [AuthController::class, 'DatosEmpresa']);
@@ -95,6 +96,7 @@ Route::group(['prefix' => 'auth'], function () {
   Route::get('ListadoCaja', [cjCajaController::class, 'ListadoCaja']);
   Route::post('CrearCaja', [cjCajaController::class, 'CrearCaja']);
 
+
   
 
 
@@ -107,7 +109,7 @@ Route::group(['prefix' => 'auth'], function () {
   Route::get('GetBalanceShopping', [cjACController::class, 'GetBalanceShopping']);
   Route::get('GetTotalShoppingInCaja', [cjACController::class, 'GetTotalShoppingInCaja']);
   Route::get('VerifyCajaOpeningShoppings', [cjACController::class, 'VerifyCajaOpeningShoppings']);
-  
+  Route::post('cerrarCajaFecha', [cjACController::class, 'cerrarCajaFecha']);
   //cjtTxnController
   Route::post('guardarMovimientoCaja', [CjtTxnController::class, 'guardarMovimientoCaja']);
 
@@ -133,18 +135,15 @@ Route::group(['prefix' => 'auth'], function () {
   Route::get('listarCategoria', [intCategoriaController::class, 'listarCategoria']);
   Route::post('TraerCategoria', [intCategoriaController::class, 'TraerCategoria']);
   Route::post('eliminarCategoria', [intCategoriaController::class, 'eliminarCategoria']);
-
-
   //gtnProveedor
   Route::post('agregarProveedor', [gntProveedorController::class, 'agregarProveedor']);
   Route::post('modificarProveedor', [gntProveedorController::class, 'modificarProveedor']);
   Route::get('listarProveedores', [gntProveedorController::class, 'listarProveedores']);
   Route::post('traerProveedor', [gntProveedorController::class, 'traerProveedor']);
   Route::post('eliminarProveedor', [gntProveedorController::class, 'eliminarProveedor']);
-
-
   //gntCliente
   Route::get('ListaCliente', [gntClienteController::class, 'ListaCliente']);
+  Route::post('GuaradarCliente', [gntClienteController::class, 'GuaradarCliente']);
   Route::group(['middleware' => 'auth:api'], function () {
     Route::get('logout', [AuthController::class, 'logout']);
     Route::get('user', [AuthController::class, 'user']);

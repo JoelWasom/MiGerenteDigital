@@ -7,7 +7,7 @@ export default {
     windowWidth: 0,
     shallShowOverlay: false,
     UsuarioId: "",
-    idUtilitario:"",
+    idUtilitario: "",
 
     token: "",
     classButtonGuardar: "",
@@ -26,11 +26,11 @@ export default {
 
 
     //DATOS EMPRESA
-    NombreEmpresa :"",
-    DireccionEmpresa:"",
-    TelefonoEmpresa:"",
-    NitEmpresa:"",
-    LogoEmpresa:"",
+    NombreEmpresa: "",
+    DireccionEmpresa: "",
+    TelefonoEmpresa: "",
+    NitEmpresa: "",
+    LogoEmpresa: "",
 
     //OTRAS ACCIONES
     TipoAccion: "guardar", // Accion de botones 
@@ -42,8 +42,10 @@ export default {
     isEdita: true,
     isElimina: true,
     isVer: true,
-    ExisteMonto:true,
+    ExisteMonto: true,
     NombreUsuario: "",
+    idRolSelecionado: ""
+
   },
   getters: {
     // obtiene el valor actual
@@ -67,6 +69,10 @@ export default {
       state.shallShowOverlay = val !== undefined ? val : !state.shallShowOverlay
     },
 
+
+    setidRolSelecionado(state, idrol) {
+      state.idRolSelecionado = idrol
+    },
     setTipoAccion(state, tipo) {
       state.TipoAccion = tipo;
     },
@@ -100,8 +106,8 @@ export default {
     setidUtilitario(state, id) {
       state.idUtilitario = id;
     },
-    setExisteMonto(state,existe){
-      state.ExisteMonto=existe
+    setExisteMonto(state, existe) {
+      state.ExisteMonto = existe
     },
 
     setNombreEmpresa(state, NombreEmpresa) {
@@ -142,28 +148,31 @@ export default {
     permisoVer({ commit }, { ver }) {
       commit("setbotonVer", ver);
     },
-    cambiaId({ commit },idUtilitario) {
+    cambiaId({ commit }, idUtilitario) {
       commit("setidUtilitario", idUtilitario);
     },
-    cambiaExisteMonto({commit},existe){
-      commit("setExisteMonto",existe)
+    cambiaExisteMonto({ commit }, existe) {
+      commit("setExisteMonto", existe)
     },
 
-     cambiaNombreEmpresa({ commit },NombreEmpresa) {
+    cambiaNombreEmpresa({ commit }, NombreEmpresa) {
       commit("setNombreEmpresa", NombreEmpresa);
     },
 
-    cambiaDireccionEmpresa({ commit },DireccionEmpresa) {
+    cambiaDireccionEmpresa({ commit }, DireccionEmpresa) {
       commit("setDireccionEmpresa", DireccionEmpresa);
     },
-    cambiaTelefonoEmpresa({ commit },TelefonoEmpresa) {
+    cambiaTelefonoEmpresa({ commit }, TelefonoEmpresa) {
       commit("setTelefonoEmpresa", TelefonoEmpresa);
     },
-    cambiaLogoEmpresa({ commit },LogoEmpresa) {
+    cambiaLogoEmpresa({ commit }, LogoEmpresa) {
       commit("setLogoEmpresa", LogoEmpresa);
     },
-    cambiaNitEmpresa({ commit },NitEmpresa) {
+    cambiaNitEmpresa({ commit }, NitEmpresa) {
       commit("setNitEmpresa", NitEmpresa);
     },
+    cambia_idRolSelecionado({ commit }, idRolSelecionado) {
+      commit("setidRolSelecionado", idRolSelecionado)
+    }
   },
 }

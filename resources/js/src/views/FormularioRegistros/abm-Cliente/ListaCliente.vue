@@ -1,30 +1,27 @@
+   
 <template>
     <section>
-
         <div>
-            <b-modal ref="frm-apertura" id="frm-apertura" ok-title="Cerrar" ok-variant="danger" ok-only size="lg" centered
-                title="Apertura y Cierre de Caja" @ok="obtenerAperturasCaja">
+            <b-modal ref="frmCliente" id="frmCliente" ok-title="Cerrar" ok-variant="danger" ok-only size="lg" centered
+                title="Registro de Proveedores" @ok="ListaCliente">
                 <!-- Diseño del Formulario -->
-                <apertura-cierre></apertura-cierre>
+                <frm-cliente></frm-cliente>
             </b-modal>
         </div>
         <div>
-
             <b-overlay id="overlay-background" :variant="variant" :opacity="opacity" :blur="blur">
                 <b-card border-variant="info">
-
+                    <!-- <b-card-title style="text-align: center">Listado de Cajas</b-card-title> -->
+                    <!-- <b-card-body> -->
                     <b-row>
-
-                        <b-col sm="4" md="4" xl="4" lg="4" class="mb-1">
+                        <b-col sm="4" md="5" xl="6" lg="6" class="mb-1">
                             <!-- Boton Modal -->
-                            <b-button v-ripple.400="'rgba(113, 102, 240, 0.15)'" variant="success"
+                            <b-button v-ripple.400="'rgba(113, 102, 240, 0.15)'" v-b-modal.frmCliente variant="success"
                                 @click="clickAccion('', 'guardar')" :class="{ 'd-none': $store.state.app.isCrea }">
                                 Nuevo Registro
                             </b-button>
                         </b-col>
-
-                    
-                        <b-col sm="4" md="4" xl="4" lg="4">
+                        <b-col sm="8" md="7" xl="6" lg="6">
                             <b-form-group label-for="filter-input">
                                 <b-input-group>
                                     <b-form-input id="filter-input" v-model="filter" debounce="200" type="search"
@@ -40,16 +37,10 @@
                     <b-row>
                         <b-col>
                             <!-- Tabla --> <!-- Listado -->
-                            <b-table id="tabla-lista-apertura" :items="items" :fields="fields" :filter="filter"
+                            <b-table id="tabla-lista-marcas" :items="items" :fields="fields" :filter="filter"
                                 @filtered="onFiltered" hover responsive="sm" :busy="isBusy" outlined
                                 :sticky-header="stickyHeader">
-                                <!-- <template #cell(artCantidad)="data">
-                                    <b-badge pill :variant="data.item.artCantMin">
-                                        <div class="custom-badge d-flex align-items-center">
-                                            <span>{{ data.item.artCantidad }}</span>
-                                        </div>
-                                    </b-badge>
-                                </template> -->
+
                                 <template #cell(Acción)="row">
                                     <b-row>
                                         <b-col>
@@ -77,14 +68,6 @@
                                             </b-button>
                                         </b-col>
                                     </b-row>
-                                </template>
-                                <template #cell(cheked)="data">
-                                    <b-form-checkbox :checked="data.item.checked" v-model="data.item.checked"
-                                        @change="clickAccion(data.item, ('cierre'))"
-                                        :class="{ 'custom-control-success': data.item.checked, 'custom-control-danger': !data.item.checked }"
-                                        :disabled="data.item.checked"
-                                        >
-                                    </b-form-checkbox>
                                 </template>
                                 <template #table-busy>
                                     <div class="text-center text-danger my-2">
@@ -135,15 +118,15 @@ import {
     BSpinner,
     BFormValidFeedback,
     BFormInvalidFeedback,
-    BAlert,
 } from "bootstrap-vue";
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
-import AperturaCierre from './AperturaCierre.vue';
+import FrmCliente from './frmCliente.vue';
+
+
 
 export default {
     components: {
-        BAlert,
         VBTooltip,
         vSelect,
         BFormFile,
@@ -177,8 +160,7 @@ export default {
         BFormDatalist,
         BBadge,
         BSpinner,
-        AperturaCierre,
-
+        FrmCliente
     },
     directives: {
         "b-tooltip": VBTooltip,
@@ -193,7 +175,7 @@ export default {
                 // Transition name
                 name: "flip-list",
             },
-            confirmCheked:false,
+
             mesReporte: "",
             shows: true,
             isBusy: false,
@@ -209,15 +191,16 @@ export default {
             estado: "",
             items: [],
             fields: [
-                { key: "id", label: "codigo", sortable: true },
-                { key: "nombre_caja", label: "CAJA", sortable: true },
-                { key: "acMontoApertura", label: "$APERTURA", sortable: true },
-                { key: "acMontoCierre", label: "$CIERRE", sortable: true },
-                { key: "acFechaApertura", label: "F.APERTURA", sortable: true },
-                { key: "acFechaCierre", label: "F. CIERRE", sortable: true },
-                { key: "nombre_usuario", label: "USUARIO", sortable: true },
+
+
+                { key: "cliNombre", label: "Cliente", sortable: true },
+                { key: "cliApp", label: "App", sortable: true },
+                { key: "cliApm", label: "Apm", sortable: true },
+                { key: "cliCedula", label: "CEDULA", sortable: true },
+                { key: "cliDireccion", label: "DIRECCION", sortable: true },
+                { key: "cliRazonSocial", label: "Razon Social", sortable: true },
+                { key: "cliTelefono", label: "TELEFONO", sortable: true },
                 { key: "Acción", sortable: false },
-                { key: "cheked", label: "CERRAR" },
             ],
 
             show: false,
@@ -238,77 +221,67 @@ export default {
         },
     },
     mounted() {
-        this.obtenerAperturasCaja();
+        this.ListaCliente();
     },
     methods: {
         clickAccion(item, accion) {
 
 
-            if (accion === "guardar" && this.$store.state.app.ExisteMonto) {
-
-                this.$refs["frm-apertura"].show();
+            if (accion === "guardar") {
                 this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'success', icono: 'SaveIcon', texto: 'Guardar', Bclass: '' })
             }
             if (accion === "editar") {
 
-                this.$store.dispatch('app/cambiaId', item["artId"])
+                this.$store.dispatch('app/cambiaId', item["id"])
                 this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'primary', icono: 'SaveIcon', texto: 'Modificar', Bclass: '' })
 
-                this.$refs["frm-apertura"].show();
+                this.$refs["frmCliente"].show();
             }
             if (accion === "ver") {
-                this.$store.dispatch('app/cambiaId', item["artId"])
-                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'success', icono: 'SaveIcon', texto: 'Guardar', Bclass: 'd-none' })
+                this.$store.dispatch('app/cambiaId', item["id"])
+                this.$store.dispatch('app/cambiarTipoAccion', { tipo: accion, variant: 'warning', icono: 'FileIcon', texto: 'Ver compras en nota PDF', Bclass: '' })
 
-                this.$refs["frm-apertura"].show();
+                this.$refs["frmCliente"].show();
             }
             if (accion === "eliminar") {
                 this.ControlaEliminar(item)
             }
-            if (accion === "cierre") {
-                debugger
-                this.confirmCierreCaja(item)
-
-            }
         },
-        UsuarioAlerta(variant, msj) {
-            let title, confirmButtonClass, showClass;
+        UsuarioAlerta(variant) {
 
             if (variant === "success") {
-                title = "Buen Trabajo";
-                confirmButtonClass = "btn btn-success";
-                showClass = "animate__animated animate__bounceIn";
-            } else if (variant === "error") {
-                title = "¡Error!";
-                confirmButtonClass = "btn btn-danger";
-                showClass = "btn btn-danger animate__animated animate__rubberBand";
-            } else if (variant === "warning") {
-                title = "Precaución";
-                confirmButtonClass = "btn btn-warning";
-                showClass = "animate__animated animate__wobble";
+                this.$swal({
+                    title: "Buen Trabajo",
+                    text: "Operacion Exitosa",
+                    icon: variant,
+                    customClass: {
+                        confirmButton: "btn btn-success",
+                    },
+                    showClass: {
+                        popup: "animate__animated animate__bounceIn",
+                    },
+                    buttonsStyling: true,
+                });
             } else {
-                // Puedes agregar más casos según tus necesidades.
+                this.$swal({
+                    title: "¡Error!",
+                    text: "No se Logro Realizar la Operacíon",
+                    icon: variant,
+                    customClass: {
+                        confirmButton: "btn btn-danger",
+                    },
+                    showClass: {
+                        popup: "animate__animated animate__tada",
+                    },
+                    buttonsStyling: true,
+                });
             }
-
-            this.$swal({
-                title: title,
-                text: msj,
-                icon: variant,
-                customClass: {
-                    confirmButton: confirmButtonClass,
-                },
-                showClass: {
-                    confirmButton: showClass,
-                },
-                buttonsStyling: true,
-            });
         },
         ControlaEliminar(item) {
-
             this.boxTwo = "";
             this.$bvModal
                 .msgBoxConfirm(
-                    "El Articulo  " + " : " + item["artId"] + " Serán Eliminados",
+                    "El Articulo  " + " : " + item["id"] + " Serán Eliminados",
                     {
                         title: "Advertencia",
                         size: "sm",
@@ -331,9 +304,8 @@ export default {
             let me = this;
             const axios = require("axios").default;
             const params = new URLSearchParams();
-
-            params.append('artId', item["artId"]);
-            var url = "api/auth/eliminarArticulo";
+            params.append('provId', item["cliId"]);
+            var url = "api/auth/eliminarProveedor";
             me.isBusy = true;
             axios
                 .post(url, params)
@@ -341,7 +313,7 @@ export default {
 
                     if (response.status == 201) {
                         me.UsuarioAlerta("success");
-                        me.obtenerAperturasCaja()
+                        me.listaProveedor()
                         me.isBusy = false;
                     } else {
                         me.UsuarioAlerta("danger");
@@ -359,7 +331,7 @@ export default {
         },
         limpiarVariables() {
             let me = this;
-            me.obtenerAperturasCaja();
+            me.listaProveedor();
             me.shows = false;
             me.loaded = false;
             me.Loading = "";
@@ -369,129 +341,44 @@ export default {
             me.mes = 0;
             me.iExiste = 0;
             me.estado = "";
-        },
 
-        obtenerAperturasCaja() {
-            let me = this;
-            const axios = require("axios").default;
-            const params = new URLSearchParams();
-            // params.append('email', me.email);
-            me.items = [];
-            me.isBusy = true;
-            var url = "api/auth/obtenerAperturasCaja";
-            me.loaded = false;
-            var lista = [];
-            axios
-                .get(url)
-                .then(function (response) {
-                    var resp = response.data;
-                    var estado = false;
-                    for (let i = 0; i < resp.length; i++) {
-
-                        if (resp[i].acFechaCierre === null) {
-                            estado = false
-                        } else { estado = true }
-                        lista.push({
-                            id: resp[i].acId,
-                            cajId: resp[i].cajId,
-                            userId: resp[i].userId,
-                            acMontoApertura: resp[i].acMontoApertura,
-                            acMontoCierre: resp[i].acMontoCierre,
-                            acFechaApertura: resp[i].acFechaApertura,
-                            acFechaCierre: resp[i].acFechaCierre,
-                            acActivo: resp[i].acActivo,
-                            acFechaCreacio: resp[i].acFechaCreacion,
-                            nombre_caja: resp[i].nombre_caja,
-                            nombre_usuario: resp[i].nombre_usuario,
-                            checked: estado
-                        });
-                    }
-                    me.items = lista;
-                    me.isBusy = false;
-                    me.loaded = true;
-                })
-                .catch((e) => {
-                    alert("error al obtener los datos Lista Articulo " + e);
-                });
-        },
-
-        confirmCierreCaja(item) {
-            this.$swal({
-                title: '¿Está seguro?',
-                text: "¡No podrás revertir esto!  Asegúrate de completar todas las transacciones pendientes ",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, Continuar!',
-                cancelButtonText: 'Cancelar',
-                customClass: {
-                    confirmButton: 'btn btn-outline-warning',
-                    cancelButton:  'btn btn-outline-danger ml-1',
-                },
-                buttonsStyling: false,
-            }).then(result => {
-                if (result.value) {
-                    this.cerrarCajaFecha(item)
-                } else if (result.dismiss === 'cancel') {
-                    this.obtenerAperturasCaja()
-                    this.$swal({
-                        title: 'Operación Cancelada',
-                        text: 'Puedes seguir realizando ventas.',
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-success',
-                        },
-                    })
-                }
-            })
+            me.provDireccion = "",
+                me.provNombre = "",
+                me.provTelefono = ""
         },
 
 
-
-
-
-
-
-
-
-
-
-        async cerrarCajaFecha(item) {
+        async ListaCliente() {
             try {
-               
                 let me = this;
-                const fechaHoraCompleta = item["acFechaApertura"]
-                const fechaCompleta = new Date(fechaHoraCompleta);
-                const fechaSolo = fechaCompleta.toISOString().split('T')[0];
-                me.showOverlay = true;
-             
-                const formData = new FormData();
-                me.items = [];
+                const lista = [];
+                me.items = []
+                const response = await this.$http.get("ListaCliente")
+                const resp = response.data;
+                for (let i = 0; i < resp.length; i++) {
 
-                me.loaded = false;
-                me.isBusy = true;
-          
-                formData.append('cajId', item["id"]);
-                formData.append('userId', this.$store.state.app.UsuarioId);
-                formData.append("acFechaApertura", fechaSolo);
-                const response = await this.$http.post("cerrarCajaFecha", formData)
-                if (response.status === 201) {
-                    
-                    this.showOverlay = false;
-                    me.UsuarioAlerta("success", response.data.mensaje);
-                    me.obtenerAperturasCaja()
-                    me.isBusy = false;
+                    lista.push({
+                        cliId: resp[i].cliId,
+                        cliNombre: resp[i].cliNombre,
+                        cliApp: resp[i].cliApp,
+                        cliApm: resp[i].cliApm,
+                        cliCedula: resp[i].cliCedula,
+                        cliDireccion: resp[i].cliDireccion,
+                        cliRazonSocial: resp[i].cliRazonSocial,
+                        cliTelefono: resp[i].cliTelefono,
+                        cliActivo: resp[i].cliActivo,
+                        cliFechaCreacion: resp[i].cliFechaCreacion
+                    });
                 }
-            
+                me.items = lista;
             } catch (error) {
-              
+                console.log(error.message);
+                this.UsuarioAlerta("error", error.response);
                 this.showOverlay = false;
-                this.UsuarioAlerta("error", error.response.data.error);
+
             }
+
         },
-
-
-
-
         onContext(ctx) {
             // The date formatted in the locale, or the `label-no - date - selected` string
             this.formatted = ctx.selectedFormatted;
@@ -500,20 +387,7 @@ export default {
         },
     },
 };
-function MesActual(fecha, formato) {
-    // 2022-09-02 21:51:48.000000"
-    const map = {
-        dd: fecha.getDate(),
-        mm: fecha.getMonth() + 1,
-        yy: fecha.getFullYear().toString(),
-        yyyy: fecha.getFullYear(),
-        HH: fecha.getHours(),
-        MM: fecha.getMinutes(),
-        SS: fecha.getSeconds(),
-    };
-    // HH:MM:SS
-    return formato.replace(/yy|mm|dd|HH|MM|SS/gi, (matched) => map[matched]);
-}
+
 </script>
 <style lang="scss" >
 @import '~@resources/scss/vue/libs/vue-select.scss';
@@ -527,4 +401,4 @@ function MesActual(fecha, formato) {
     justify-content: center;
 }
 </style>
-    
+      

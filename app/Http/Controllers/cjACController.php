@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 use App\Http\Controllers\bitacoraController;
+use Illuminate\Database\QueryException;
 
 class cjACController extends Controller
 {
@@ -18,7 +19,7 @@ class cjACController extends Controller
                 ->where('cajId', $cajId)
                 ->whereDate('acFechaApertura', now()->toDateString())
                 ->first();
-                
+
             if ($aperturaCajaExistente == null) {
                 if ($cajId == '1') {
                     return response()->json(['mensaje' => 'La caja Ventas no Fue Aperturada'], 201);
@@ -134,10 +135,10 @@ class cjACController extends Controller
                 ->whereNull('acFechaCierre')
                 ->where('acActivo', 1)
                 ->first();
-   
+
             if (!$registroCierre) {
                 DB::rollBack();
-                return response()->json(['error' => 'entra por falso'], 400);
+                return response()->json(['error' => 'La caja ya fue cerrada '], 400);
             }
             DB::beginTransaction();
             $ventas = DB::table('vnttxn')
@@ -154,6 +155,7 @@ class cjACController extends Controller
             DB::table('cjaperturacierre')
                 ->where('acId', $registroCierre->acId)
                 ->where('cajId', $datosValidados['cajId'])
+                ->whereDate('acFechaApertura', '=', now()->toDateString())
                 ->where('acActivo', 1)
                 ->update([
                     'acMontoCierre' => $montoCierre,
@@ -175,6 +177,92 @@ class cjACController extends Controller
             return response()->json(['error' => 'Error al realizar el cierre de caja: ' . $e->getMessage()], 500);
         }
     }
+
+
+
+
+
+
+
+
+    public function cerrarCajaFecha(Request $request)
+    {
+        try {
+            $mensajesErrores = [
+                'cajId.required' => 'El campo ID de caja es requerido.',
+                'userId.required' => 'El campo Usuario es requerido.',
+                //'acMontoCierre.required' => 'El campo Monto de Cierre es requerido.',
+                'acFechaApertura.required' => 'El campo Fecha de Apertura es requerido.',
+                // 'acActivo.required' => 'El campo Activo es requerido.',
+            ];
+
+            // Validación de campos
+            $datosValidados = $request->validate([
+                'cajId' => 'required|numeric',
+                'userId' => 'required|numeric',
+                //'acMontoCierre' => 'required|numeric',
+                'acFechaApertura' => 'required|date',
+                // 'acActivo' => 'required',
+            ], $mensajesErrores);
+
+            DB::beginTransaction();
+            $ventas = DB::table('vnttxn')
+                ->join('vndettxn', 'vnttxn.vntId', '=', 'vndettxn.vntid')
+                ->whereDate('vndettxn.vndFechaVenta', '=', $datosValidados['acFechaApertura'])
+                ->where('vnttxn.vntActivo', 1)
+                ->select(DB::raw('SUM(IF(vndettxn.vndDescuento = 0, vndettxn.vndCantidad * vndettxn.vndPrecioVenta, vndettxn.vndCantidad * vndettxn.vndDescuento)) AS totalVenta'))
+                ->first();
+            // echo $montoVentas;
+            // Calcular el monto de cierre sumando el monto de apertura y las ventas
+            $montoCierre = $ventas->totalVenta;
+
+            DB::table('cjaperturacierre')
+                ->where(DB::raw('DATE(acFechaApertura)'), '=', $datosValidados['acFechaApertura'])
+                ->update([
+                    'acMontoCierre' => $montoCierre,
+                    'acFechaCierre' => DB::raw('CURRENT_TIMESTAMP'),
+                    'acActivo' => 1,
+                ]);
+
+            // Agregar el registro en la tabla bitácora
+            $bitacora = new bitacoraController();
+            $bitacora->insertarBitacora('cjaperturacierre', $datosValidados['cajId'], $datosValidados['userId'], 'Cierre de Caja', 'Se ha realizado el cierre de caja para la caja con ID: ' . $datosValidados['cajId']);
+
+            DB::commit();
+
+            // Retornar una respuesta de éxito
+            return response()->json(['mensaje' => 'Monto de Cierre :' .  $montoCierre], 201);
+        } catch (QueryException $e) {
+            return response()->json(['error' => 'Error al crear el cliente: ' . $e->getMessage()], 500);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 422);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public function obtenerAperturasCaja()
     {
         try {

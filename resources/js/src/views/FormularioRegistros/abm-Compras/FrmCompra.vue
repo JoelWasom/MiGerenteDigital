@@ -141,7 +141,7 @@
                                                 class="v-b-tooltip-dark text-center" />
                                         </template>
                                         <template #cell(subtotal)="row">
-                                            {{ row.item.precioC * row.item.cantidad }}
+                                            {{ Math.ceil(parseFloat(row.item.precioC) * row.item.cantidad) }}
                                         </template>
                                         <template #cell(Acción)="row">
                                             <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'" variant="flat-danger"
@@ -329,7 +329,7 @@ export default {
     computed: {
         totalPagarCalculado() {
             return this.itemsAgregado.reduce((total, item) => {
-                this.totalPagar = total + item.precioC * item.cantidad
+                this.totalPagar = total + Math.ceil(item.precioC * item.cantidad)
                 this.montoRecibido = 0;
                 this.cambio = 0;
                 return this.totalPagar;
@@ -554,7 +554,7 @@ export default {
             const detallesCompra = this.itemsAgregado.map(item => ({
                 artId: item.id, // ID del artículo
                 cmdCantidad: item.cantidad, // Cantidad vendida
-                cmdCosto: item.precioC, // Precio de Compra
+                cmdCosto: parseFloat(item.precioC), // Precio de Compra
                 vndActivo: 1 // Activo (ajusta según necesites)
             }));
             if (detallesCompra.length <= 0) {
@@ -567,12 +567,13 @@ export default {
                 if (response.status === 201) {
                     me.showOverlay = false;
                     me.cjtReferencia = response.data.cjtReferencia;
-                    me.AlertaMensaje("success", response.data.mensaje);
+                  debugger
                     me.GurdarMovimientoCaja()
                     me.generatePDF(me.itemsAgregado)
                     me.isBusy = false;
                     me.vaciarControles()
                     me.GetSaldoCajaActual()
+                    me.AlertaMensaje("success", response.data.mensaje);s
                 }
             }).catch((e) => {
                 me.showOverlay = false;
@@ -607,7 +608,7 @@ export default {
             const detallesCompra = this.itemsAgregado.map(item => ({
                 artId: item.id,
                 cmdCantidad: item.cantidad,
-                cmdCosto: item.precioC,
+                cmdCosto: parseFloat( item.precioC),
                 vndActivo: 1 
             }));
             if (detallesCompra.length <= 0) {
@@ -620,12 +621,14 @@ export default {
                 if (response.status === 200) {
                     me.showOverlay = false;
                     me.cjtReferencia = response.data.cjtReferencia;
-                    me.AlertaMensaje("success", response.data.mensaje);
+                 
                     me.GurdarMovimientoCaja()                    
+                    debugger
                     me.generatePDF(me.itemsAgregado)
                     me.isBusy = false;
                     me.vaciarControles()
                     me.GetSaldoCajaActual()
+                    me.AlertaMensaje("success", response.data.mensaje);
                 }
             }).catch((e) => {
                 me.showOverlay = false;
@@ -654,7 +657,7 @@ export default {
         },
         actualizarSubtotal(item,precio){
             item.precioC = precio
-            item.subtotal = item.precioC * item.cantidad
+            item.subtotal = Math.ceil( item.precioC * item.cantidad)
         },
         onFiltered(filteredItems) {
             // Trigger pagination to update the number of buttons/pages due to filtering
@@ -722,7 +725,7 @@ export default {
                 const columns = ['Articulo', 'Cantidad','PrecioUnitario', 'SubTotal'];
                 const rows = Articulos.map((producto) => {
                     const PrecioCompra = parseFloat(producto.precioC);
-                    const subtotal = PrecioCompra * parseInt(producto.cantidad);
+                    const subtotal =Math.ceil(parseFloat(PrecioCompra) * parseInt(producto.cantidad));
 
                     return [
                         producto.title || '',
@@ -769,7 +772,7 @@ export default {
                 // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
                 const total = Articulos.reduce((acc, producto) => {
                     const subtotal = parseFloat(producto.precioC) * parseInt(producto.cantidad);
-                    return acc + subtotal;
+                    return Math.ceil(  acc + subtotal);
                 }, 0);
                 doc.setFont('helvetica', 'neue');
                 doc.text(`Total Bs.:`, 145, doc.autoTable.previous.finalY + 10);

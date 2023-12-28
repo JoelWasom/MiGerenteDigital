@@ -134,7 +134,7 @@ class AuthController extends Controller
       ], 401);
     } else {
       $user = $request->user();
-     
+
       if ($user->activo === 0) {
         // El usuario no está activo, devuelve una respuesta de error
         return response()->json([
@@ -205,7 +205,27 @@ class AuthController extends Controller
     $idperfil = $request->idperfil;
     try {
       DB::beginTransaction();
-      $query_c = DB::select("SELECT * FROM vi_lista_menu");
+      $query_c = DB::select("SELECT * FROM vi_lista_menu as m where  m.idrol=$idperfil  order by m.orden asc ");
+      DB::commit();
+      return response()->json($query_c, 200);
+    } catch (\Exception $e) {
+      DB::rollBack();
+      return response()->json(['error' => 'Error al Cargar el Menu' . $e->getMessage()], 404);
+    }
+  }
+
+  public function AccesoMenu(Request $request)
+  {
+    $idperfil = $request->idperfil;
+    try {
+      DB::beginTransaction();
+      // $query_c=DB::select("SELECT * FROM vi_lista_menu as dt  where dt.idperfil=$idperfil and dt.checked='true';");
+      $query_c = DB::select("SELECT  a.idacceso , a.idrol , r.nombre as rol , m.nombre_menu , m.icono as m_icono, sub.nombre_submenu , sub.ruta, sub.icono 
+                              as sm_icono, sub.favorito , sub.id_menu_padre as padre, a.checked from acceso as a
+                                INNER JOIN rol as r on r.idrol=a.idrol
+                                INNER JOIN submenu as sub on  a.id_sub_menu=sub.id_submenu
+                                INNER JOIN menus as m on m.id=sub.id_menu_padre  
+                                WHERE r.idrol=  1 AND a.checked=1 ORDER BY m.orden ASC");
       DB::commit();
       return response()->json($query_c, 200);
     } catch (\Exception $e) {
@@ -213,6 +233,8 @@ class AuthController extends Controller
       return response()->json(['Mensaje' => 'error']);
     }
   }
+
+
   public function PermisoOperacion(Request $request)
   {
     $idrol = $request->idrol;
@@ -226,29 +248,17 @@ class AuthController extends Controller
       return response()->json($query_c, 200);
     } catch (\Exception $e) {
       DB::rollBack();
-      return response()->json(['Mensaje' => 'error'.$e->getMessage()]);
+      return response()->json(['Mensaje' => 'error' . $e->getMessage()]);
     }
   }
 
-  public function AccesoMenu(Request $request)
-  {
-    $idperfil = $request->idperfil;
-    try {
-      DB::beginTransaction();
-      // $query_c=DB::select("SELECT * FROM vi_lista_menu as dt  where dt.idperfil=$idperfil and dt.checked='true';");
-      $query_c = DB::select("SELECT a.idacceso , a.idrol , r.nombre as rol , m.nombre_menu , m.icono as m_icono, sub.nombre_submenu , sub.ruta, sub.icono 
-        as sm_icono, sub.favorito , sub.id_menu_padre as padre, a.checked 
-        from acceso as a 
-        inner join rol as r on a.idrol= r.idrol 
-        INNER join menus as m on a.idmenu= m.id 
-        INNER JOIN submenu as sub ON m.id =sub.id_menu_padre WHERE r.idrol=  $idperfil ORDER BY m.orden ASC");
-      DB::commit();
-      return response()->json($query_c, 200);
-    } catch (\Exception $e) {
-      DB::rollBack();
-      return response()->json(['Mensaje' => 'error']);
-    }
-  }
+
+
+
+
+
+
+
   public function ModificaPerfil(Request $request)
   {
     // UPDATE detalle_perfil set detalle_perfil.activo=true  where id_detalle_perfil=45;
@@ -296,48 +306,46 @@ class AuthController extends Controller
       return response()->json(['Mensaje' => 'error' . $e->getMessage()]);
     }
   }
-  public function usuarioResponsable(Request $request)
+
+
+  public function ModificaAcceso(Request $request)
   {
-    // UPDATE `users` SET `activo` = '0' WHERE `users`.`id` = 34;
-    $idusuario = $request->idusuario;
+    $acceco = $request->idacceso;
+    $checked = $request->checked;
     try {
-      DB::beginTransaction();
-      $query_c = DB::select("SELECT a.id , a.name from users as a WHERE a.activo=1;");
-      DB::commit();
-      return response()->json($query_c, 201);
+      DB::table('acceso')
+        ->where('idacceso', $acceco)
+        ->update(['checked' => $checked]);
+
+      return response()->json(['mensaje' => 'Actualización exitosa'], 201);
     } catch (\Exception $e) {
-      DB::rollBack();
-      return response()->json(['Mensaje' => 'error']);
+      // Manejo de errores, por ejemplo, loggear el error o devolver un mensaje de error.
+      return response()->json(['error' => 'Error al actualizar: ' . $e->getMessage()], 500);
     }
   }
 
-  public function MenuPefil(Request $request)
-  {
+  // public function DatosEmpresa()
+  // {
+  //   try {
+  //     $empresa = DB::table('gntempresa')->get();
 
-    $idperfil = $request->idperfil;
-    try {
-      DB::beginTransaction();
-      $query_c = DB::select("SELECT 
-          a.id_detalle_perfil,
-          a.idperfil,
-          b.nombre_perfil,
-          a.idmenu,
-          c.name,
-          c.parent,
-          c.slug
-          from detalle_perfil as a 
-          inner join perfil  as b on b.idperfil= a.idperfil
-          INNER JOIN menus as c on a.idmenu=c.id
-          WHERE a.idperfil=$idperfil;
-          ");
-      DB::commit();
-      return response()->json($query_c, 201);
-    } catch (\Exception $e) {
-      DB::rollBack();
-      return response()->json(['Mensaje' => 'error']);
-    }
-  }
+  //     if ($empresa->isNotEmpty()) {
+  //       $empresaUtf8 = $empresa->map(function ($item) {
+  //         // Convertir las cadenas a UTF-8 si es necesario
+  //         $item->emLogo = base64_encode($item->emLogo);
+  //         // Agrega más conversiones para otras columnas si es necesario
 
+  //         return $item;
+  //       });
+
+  //       return response()->json($empresaUtf8, 201);
+  //     } else {
+  //       return response()->json(['Mensaje' => 'No se encontraron datos']);
+  //     }
+  //   } catch (\Exception $e) {
+  //     return response()->json(['error' => 'No se Logró Obtener los Datos de la Empresa: ' . $e->getMessage()], 409);
+  //   }
+  // }
   public function DatosEmpresa()
   {
       try {

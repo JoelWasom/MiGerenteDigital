@@ -43,6 +43,16 @@
                                 </b-col>
                             </b-row>
                             <b-row>
+                                <b-col sm="12" md="12" xl="12">
+                                    <b-form-group>
+                                        <label for="tipoPago">Fecha de Compra:</label>
+                                        <!-- <b-form-datepicker v-model="txtFechaVenta"></b-form-datepicker> -->
+                                        <flat-pickr v-model="txtFechaVenta" class="form-control"
+                                            :config="{ enableTime: true, dateFormat: 'Y-m-d H:i' }" />
+                                    </b-form-group>
+                                </b-col>
+                            </b-row>
+                            <b-row>
                                 <b-col>
                                     <b-form-group>
                                         <label>Total a Pagar</label>
@@ -173,6 +183,7 @@ import {
     BImg,
     BFormFile,
     BFormDatepicker,
+
     BRow,
     BModal,
     VBModal,
@@ -207,6 +218,8 @@ import {
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import flatPickr from 'vue-flatpickr-component'
+
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 export default {
@@ -220,6 +233,7 @@ export default {
         BFormInvalidFeedback,
         BOverlay,
         BFormDatepicker,
+        flatPickr,
         BInputGroupAppend,
         BInputGroup,
         BRow,
@@ -261,6 +275,7 @@ export default {
             cjtReferencia: 0, // Monto recibido
             cambio: 0, // Cambio a entregar
             vntNumero: "",
+            txtFechaVenta: null,
             isBusy: false,
             filter: "",
             stickyHeader: true,
@@ -330,7 +345,7 @@ export default {
                 // Crear un nuevo documento PDF
                 const doc = new jsPDF();
                 let me = this;
-
+                debugger
                 // Agregar el logo de la empresa (reemplaza 'ruta_al_logo' con la ruta de tu imagen)
                 const image = new Image();
                 var imgData = 'data:image/png;base64,' + me.$store.state.app.LogoEmpresa;
@@ -342,8 +357,11 @@ export default {
                 doc.text('TELEFONO  : ' + me.$store.state.app.TelefonoEmpresa, 40, 25);
                 doc.text('Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
                 const currentDate = new Date(); // Obtiene la fecha actual
+
+                
+
                 const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                const formattedDate = currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
+                const formattedDate = me.txtFechaVenta// currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
 
                 // Configuración de la nota de venta
                 const notaDeVenta = {
@@ -427,7 +445,7 @@ export default {
                 const newWindow = window.open();
                 newWindow.document.write('<iframe width="100%" height="100%" src="' + dataUri + '"></iframe');
             } catch (error) {
-                me.UsuarioAlerta("error", "Error al generar el PDF: " + error.message);
+                this.UsuarioAlerta("error", "Error al generar el PDF: " + error.message);
             }
         }
         ,
@@ -599,6 +617,7 @@ export default {
             me.itemsAgregado = []
             me.montoRecibido = 0
             me.cambio = 0
+            me.txtFechaVenta = null
             me.cbxArticulo();
         },
 
@@ -635,8 +654,8 @@ export default {
 
         },
 
-        DetalleVenta(){
-            
+        DetalleVenta() {
+
         },
 
 
@@ -646,7 +665,7 @@ export default {
             const hoy = new Date();
             const axios = require("axios").default;
             const formData = new FormData();
-            if (me.selectedCliente === null || me.selectedTipoVenta === null || me.SelectedtipoPago === null) {
+            if (me.selectedCliente === null || me.selectedTipoVenta === null || me.SelectedtipoPago === null || me.txtFechaVenta === null) {
                 return me.UsuarioAlerta("error", "Faltan Datos Para Ingresar")
             }
             formData.append("cliId", me.selectedCliente.id); //  ID del cliente
@@ -655,6 +674,7 @@ export default {
             formData.append("vntCredito", me.selectedTipoVenta.id); // Esto puede ser 1 o 0 según corresponda (crédito o no)
             formData.append("fpId", me.SelectedtipoPago.id)  //Forma de pago 
             formData.append("vntActivo", 1); // Esto puede ser 1 o 0 según corresponda (activo o no)
+            formData.append("vntFechaCreacion", me.txtFechaVenta);
             // Construye un array de detalles de venta
             const detallesVenta = this.itemsAgregado.map(item => ({
                 artId: item.id, // ID del artículo
@@ -680,7 +700,7 @@ export default {
                         me.UsuarioAlerta("success", response.data.mensaje);
                         me.cjtReferencia = response.data.cjtReferencia;
                         me.GurdarMovimientoCaja()
-              
+
                         me.generatePDF(me.itemsAgregado)
                         me.isBusy = false;
                         me.vaciarControles()
@@ -772,6 +792,7 @@ export default {
 @import '~@resources/scss/vue/libs/vue-select.scss';
 @import "~@resources/scss/base/pages/app-ecommerce-details.scss";
 @import '~@resources/scss/vue/libs/vue-sweetalert.scss';
+@import '~@resources/scss/vue/libs/vue-flatpicker.scss';
 
 .product-image-container {
     width: 60px;

@@ -57,7 +57,7 @@ export default {
       "dark",
     ];
 
-   
+
     // eslint-disable-next-line no-plusplus
     for (let i = 0, len = colors.length; i < len; i++) {
       $themeColors[colors[i]] = useCssVar(
@@ -85,7 +85,7 @@ export default {
 
     //Fecha actula
 
-   
+
   },
   setup() {
     const { skin, skinClasses } = useAppConfig();
