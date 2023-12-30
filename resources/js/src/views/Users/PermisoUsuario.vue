@@ -567,7 +567,7 @@ export default {
             me.isBusy = false;
             me.ListaPaginas();
 
-            me.dataGestion();
+            // me.dataGestion();
           } else {
             me.success("danger");
           }
