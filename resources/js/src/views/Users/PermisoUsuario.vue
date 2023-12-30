@@ -423,18 +423,16 @@ export default {
       me.loaded = false;
       var lista = [];
       axios
-
         .get(url)
         .then(function (response) {
           var resp = response.data;
+          var estado = false
           for (let i = 0; i < resp.length; i++) {
-            var estado = false
             if (resp[i].checked === 1) {
               estado = true
             } else {
               estado = false
             }
-
             lista.push({
               id: resp[i].idacceso,
               Menu: resp[i].nombre_menu,

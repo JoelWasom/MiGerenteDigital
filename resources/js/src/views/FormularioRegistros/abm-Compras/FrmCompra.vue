@@ -1,16 +1,27 @@
 <template>
     <section>
-        <b-row v-show="txtNumero!=''">
+        <b-modal ref="frmProveedor" id="frmProveedor" ok-title="Cerrar" ok-variant="danger" ok-only size="md" centered
+            title="Registro de Cliente" no-close-on-backdrop @ok="cbxProveedor" @hidden="cerrarVentana">
+            <!-- Diseño del Formulario -->
+
+            <frm-proveedor></frm-proveedor>
+
+
+        </b-modal>
+
+        <b-row v-show="txtNumero != ''">
             <b-col sm="12" md="12" xl="12">
                 <b-card border-variant="info">
-                    <h5>Nro. de Compra: <b style="font-size: x-large;">{{ txtNumero }}</b>, Monto disponible caja Gastos: <b style="font-size: x-large;">{{cjtSaldoAperturaDia.toFixed(2)}}</b></h5>
+                    <h5>Nro. de Compra: <b style="font-size: x-large;">{{ txtNumero }}</b>, Monto disponible caja Gastos: <b
+                            style="font-size: x-large;">{{ cjtSaldoAperturaDia.toFixed(2) }}</b></h5>
                 </b-card>
             </b-col>
         </b-row>
-        <b-row v-show="txtNumero==''">
+        <b-row v-show="txtNumero == ''">
             <b-col sm="12" md="12" xl="12">
                 <b-card border-variant="info">
-                    <h5>Monto disponible caja Gastos: <b style="font-size: x-large;">{{cjtSaldoAperturaDia.toFixed(2)}}</b></h5>
+                    <h5>Monto disponible caja Gastos: <b style="font-size: x-large;">{{ cjtSaldoAperturaDia.toFixed(2) }}</b>
+                    </h5>
                 </b-card>
             </b-col>
         </b-row>
@@ -20,42 +31,26 @@
                     <b-col>
                         <b-card border-variant="info">
                             <b-row>
-                                <b-col sm="12" md="12" xl="12">
+                                <b-col sm="10" md="10" xl="10">
 
                                     <b-form-group>
                                         <label for="tipoPago">Proveedor</label>
-                                        <v-select label="title" placeholder="Seleccionar Proveedor" class="select-size-lg" 
-                                            v-model="selectedProveedor" 
-                                            :options="gntProveedor" 
-                                            :max-options="3">
+                                        <v-select label="title" placeholder="Seleccionar Proveedor" class="select-size-lg"
+                                            v-model="selectedProveedor" :options="gntProveedor" :max-options="3">
                                         </v-select>
                                     </b-form-group>
+                                </b-col>
+                                <b-col sm="2" md="2" xl="2" lg="2">
+                                    <b-form-group>
+                                        <b-button v-ripple.400="'rgba(40, 199, 111, 0.15)'" variant="flat-success"
+                                            v-b-modal.frmProveedor class="btn-icon">
+                                            <feather-icon icon="PackageIcon" />
+                                        </b-button>
+                                    </b-form-group>
+
                                 </b-col>
                             </b-row>
-                            <!-- <b-row>
-                                <b-col sm="12" md="12" xl="12">
-                                    <b-form-group>
-                                        <label for="tipoPago">Tipo Compra</label>
-                                        <v-select label="title" placeholder="Seleccionar" class="select-size-lg"
-                                            v-model="selectedTipoCompra" 
-                                            :options="tipoCompra" 
-                                            :max-options="3">
-                                        </v-select>
-                                    </b-form-group>
-                                </b-col>
-                            </b-row>
-                            <b-row>
-                                <b-col sm="12" md="12" xl="12">
-                                    <b-form-group>
-                                        <label for="tipoPago">Forma de Pago</label>
-                                        <v-select label="title" placeholder="Seleccionar" class="select-size-lg"
-                                            v-model="SelectedtipoPago" 
-                                            :options="tiposPago" 
-                                            :max-options="3">
-                                        </v-select>
-                                    </b-form-group>
-                                </b-col>
-                            </b-row> -->
+
                             <b-row>
                                 <b-col sm="12" md="12" xl="12">
                                     <b-form-group>
@@ -72,21 +67,8 @@
                                     </b-form-group>
                                 </b-col>
                             </b-row>
-                            <!-- <b-row >
-                                <b-col>
-                                    <b-form-group>
-                                        <label for="montoRecibido">Monto Recibido</label>
-                                        <b-form-input id="montoRecibido" class="montos" v-model="montoRecibido"></b-form-input>
-                                    </b-form-group>
-                                </b-col>
-                                <b-col>
-                                    <b-form-group>
-                                        <label>Cambio</label>
-                                        <b-form-input class="montos" disabled v-model="cambio"></b-form-input>
-                                    </b-form-group>
-                                </b-col>
-                            </b-row> -->
-                        </b-card>                        
+
+                        </b-card>
                     </b-col>
                 </b-row>
             </b-col>
@@ -101,7 +83,7 @@
                                         <v-select ref="selectedProductos" v-model="selectedProductos"
                                             :options="booksProductos" label="title" placeholder="Seleccionar"
                                             class="select-size-lg" :max-options="3" @input="AgregarProductoDetalle()">
-                                            <template #option="{ title, icon, cantidad }">
+                                            <template #option="{ title, icon, cantidad, marca }">
 
                                                 <div class="d-flex align-items-center">
                                                     <div class="product-image-container">
@@ -111,6 +93,7 @@
                                                     <div class="product-details">
                                                         <strong>{{ title }}</strong>
                                                         <div class="text-secondary ">Stock: {{ cantidad }}</div>
+                                                        <div class="text-secondary">Marca:{{ marca }}</div>
                                                     </div>
                                                 </div>
                                             </template>
@@ -121,19 +104,9 @@
                             <b-row>
                                 <b-col>
                                     <!-- Tabla --> <!-- Listado -->
-                                    <b-table id="tabla-lista-detalle"
-                                     :items="itemsAgregado" 
-                                     :fields="fieldsAgregado"
-                                     :filter="filter" 
-                                     @filtered="onFiltered" 
-                                     hover 
-                                     :busy="isBusy" 
-                                     :bordered="true"
-                                     outlined 
-                                     stacked="sm"  
-                                     small
-                                    :style="{ fontSize: fontSize }"
-                                                >
+                                    <b-table id="tabla-lista-detalle" :items="itemsAgregado" :fields="fieldsAgregado"
+                                        :filter="filter" @filtered="onFiltered" hover :busy="isBusy" :bordered="true"
+                                        outlined stacked="sm" small :style="{ fontSize: fontSize }">
                                         <template #cell(precioC)="row">
                                             <b-form-input v-model="row.value" type="number" min="0"
                                                 @input="actualizarSubtotal(row.item, row.value)" ref="PrecioInput"
@@ -226,13 +199,14 @@ import {
     BSpinner,
     BFormValidFeedback,
     BFormInvalidFeedback,
-    
+
 } from "bootstrap-vue";
 import Ripple from "vue-ripple-directive";
 import vSelect from 'vue-select'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import FrmProveedor from '../abm-Proveedor/frmProveedor.vue';
 export default {
     components: {
         VBTooltip,
@@ -270,7 +244,8 @@ export default {
         BFormDatalist,
         BBadge,
         BSpinner,
-        BFormSpinbutton
+        BFormSpinbutton,
+        FrmProveedor
     },
     data() {
         return {
@@ -281,13 +256,13 @@ export default {
             tipoCompra: [{ id: "0", title: "CONTADO" }, { id: "1", title: "CREDITO" }],
             selectedTipoCompra: null,
             totalPagar: 0, // Total a pagar
-            montoRecibido:0,
-            txtId:null,
+            montoRecibido: 0,
+            txtId: null,
             txtNumero: "",
-            txtUserId:"",
+            txtUserId: "",
             txtFechaCompra: null,
             cjtReferencia: 0, // Monto recibido,
-            cjtSaldoAperturaDia:0,
+            cjtSaldoAperturaDia: 0,
             cambio: 0, // Cambio a entregar
             isBusy: false,
             filter: "",
@@ -334,9 +309,9 @@ export default {
 
         const movil = window.innerWidth;
         if (movil <= 576) {
-      // Dispositivo móvil pequeño
-        this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
-    }
+            // Dispositivo móvil pequeño
+            this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
+        }
         if (this.$store.state.app.TipoAccion === "editar" || this.$store.state.app.TipoAccion === "ver") {
             this.GetShoppingById()
         }
@@ -356,7 +331,7 @@ export default {
     methods: {
         /**
          * Funcion para notificar alertas de las eventualidades (Success, Warning, Error, etc)
-         *  */ 
+         *  */
         AlertaMensaje(variant, msj) {
             let title, confirmButtonClass, showClass;
             if (variant === "success") {
@@ -427,15 +402,22 @@ export default {
                         title: resp[i].artNombre,
                         icon: resp[i].artFoto,
                         precioC: resp[i].artCosto,
-                        cantidad: resp[i].artCantidad
+                        cantidad: resp[i].artCantidad,
+                        marca: resp[i].marNombre
                     });
                 }
                 me.booksProductos = lista;
                 me.isBusy = false;
                 me.loaded = true;
             }).catch((e) => {
-                AlertaMensaje("error", "Obtener Datos de Articulos, Detalles: "+ e.response.data.error);
+                AlertaMensaje("error", "Obtener Datos de Articulos, Detalles: " + e.response.data.error);
             });
+        },
+
+
+
+        cerrarVentana(){
+            this.cbxProveedor()
         },
         cbxProveedor() {
             let me = this;
@@ -457,7 +439,7 @@ export default {
                 me.isBusy = false;
                 me.loaded = true;
             }).catch((e) => {
-                AlertaMensaje("error", "Obtener Datos de Proveedores, Detalles: "+ e.response.data.error);
+                AlertaMensaje("error", "Obtener Datos de Proveedores, Detalles: " + e.response.data.error);
             });
         },
         AgregarProductoDetalle() {
@@ -491,32 +473,32 @@ export default {
             let me = this;
             const axios = require("axios").default;
             // alert(this.$store.state.app.idUtilitario)
-            let parametros = '?cmtId='+this.$store.state.app.idUtilitario
+            let parametros = '?cmtId=' + this.$store.state.app.idUtilitario
             me.items = [];
 
             var url = "api/auth/GetShoppingById";
             me.loaded = false;
-            me.itemsAgregado=[];
-            axios.get(url+parametros).then(function (response) {
-                    var resp = response.data.data;
-                    me.txtId = resp.cmtId;
-                    me.txtUserId = resp.userId;
-                    me.selectedProveedor = { id: resp.provId, title: resp.provNombre, };
-                    me.txtNumero = resp.cmtNumero;
-                    me.txtFechaCompra = resp.cmtFechaCompra;
-                    var detalle = response.data.detalle;
-                    
-                    for (let i = 0; i < detalle.length; i++) {
-                        me.itemsAgregado.push({
-                            id: detalle[i].artid, 
-                            title: detalle[i].artNombre, 
-                            cantidad: detalle[i].cmdCantidad, 
-                            precioC: detalle[i].cmdCosto, 
-                            subtotal: (detalle[i].cmdCantidad*detalle[i].cmdCosto)
-                        });
-                    }
-                    me.loaded = true;
-                })
+            me.itemsAgregado = [];
+            axios.get(url + parametros).then(function (response) {
+                var resp = response.data.data;
+                me.txtId = resp.cmtId;
+                me.txtUserId = resp.userId;
+                me.selectedProveedor = { id: resp.provId, title: resp.provNombre, };
+                me.txtNumero = resp.cmtNumero;
+                me.txtFechaCompra = resp.cmtFechaCompra;
+                var detalle = response.data.detalle;
+
+                for (let i = 0; i < detalle.length; i++) {
+                    me.itemsAgregado.push({
+                        id: detalle[i].artid,
+                        title: detalle[i].artNombre,
+                        cantidad: detalle[i].cmdCantidad,
+                        precioC: detalle[i].cmdCosto,
+                        subtotal: (detalle[i].cmdCantidad * detalle[i].cmdCosto)
+                    });
+                }
+                me.loaded = true;
+            })
                 .catch((e) => {
                     alert("error al obtener los datos de Compra " + e);
                 });
@@ -533,14 +515,14 @@ export default {
             formData.append("cjtDescripcion", "Egresos Por Compra");
             formData.append("ttxnId", 2); // 2=Egresos
             axios.post("api/auth/guardarMovimientoCaja", formData, {
-                headers: {"Content-Type": "multipart/form-data"}
+                headers: { "Content-Type": "multipart/form-data" }
             }).then(function (response) {
                 if (response.status === 201) {
                     console.log(response.data.mensaje)
                 }
             }).catch((e) => {
                 me.showOverlay = false;
-                me.AlertaMensaje("error", "Guardar Movimiento en Caja, Detalles: ",e.response.data.error);
+                me.AlertaMensaje("error", "Guardar Movimiento en Caja, Detalles: ", e.response.data.error);
             });
         },
         AddShopping() {
@@ -564,7 +546,7 @@ export default {
             formData.append("provId", me.selectedProveedor.id); //  ID del Proveedor
             formData.append("userId", this.$store.state.app.UsuarioId); // ID del usuario actual
             formData.append("txnId", 2); //ID del tipo de transacción 1=Ingreso, 2=Egreso
-            formData.append("cmtFechaCompra",me.txtFechaCompra)
+            formData.append("cmtFechaCompra", me.txtFechaCompra)
             formData.append("cmtActivo", 1); // Esto puede ser 1 o 0 según corresponda (activo o no)
             // Construye un array de detalles de Compra
             const detallesCompra = this.itemsAgregado.map(item => ({
@@ -583,13 +565,13 @@ export default {
                 if (response.status === 201) {
                     me.showOverlay = false;
                     me.cjtReferencia = response.data.cjtReferencia;
-                  debugger
+                    debugger
                     me.GurdarMovimientoCaja()
                     me.generatePDF(me.itemsAgregado)
                     me.isBusy = false;
                     me.vaciarControles()
                     me.GetSaldoCajaActual()
-                    me.AlertaMensaje("success", response.data.mensaje);s
+                    me.AlertaMensaje("success", response.data.mensaje); s
                 }
             }).catch((e) => {
                 me.showOverlay = false;
@@ -614,18 +596,18 @@ export default {
             if (me.totalPagar > me.cjtSaldoAperturaDia) {
                 return me.AlertaMensaje("warning", "Está excediendo el monto total al saldo de caja aperturada para Gastos..")
             }
-            formData.append("cmtId",this.$store.state.app.idUtilitario);
+            formData.append("cmtId", this.$store.state.app.idUtilitario);
             formData.append("provId", me.selectedProveedor.id); //  ID del Proveedor
             formData.append("userId", this.$store.state.app.UsuarioId); // ID del usuario actual
-            formData.append("cmtFechaCompra",me.txtFechaCompra)
+            formData.append("cmtFechaCompra", me.txtFechaCompra)
             /**
              * Se construye un array para el detalle de compras
              */
             const detallesCompra = this.itemsAgregado.map(item => ({
                 artId: item.id,
                 cmdCantidad: item.cantidad,
-                cmdCosto: parseFloat( item.precioC),
-                vndActivo: 1 
+                cmdCosto: parseFloat(item.precioC),
+                vndActivo: 1
             }));
             if (detallesCompra.length <= 0) {
                 return me.AlertaMensaje("warning", "Debe agregar al menos un producto para realizar el registro de compra.")
@@ -637,8 +619,8 @@ export default {
                 if (response.status === 200) {
                     me.showOverlay = false;
                     me.cjtReferencia = response.data.cjtReferencia;
-                 
-                    me.GurdarMovimientoCaja()                    
+
+                    me.GurdarMovimientoCaja()
                     debugger
                     me.generatePDF(me.itemsAgregado)
                     me.isBusy = false;
@@ -661,19 +643,19 @@ export default {
             var lista = [];
             axios.get(url).then(function (response) {
                 var resp = response.data;
-                me.cjtSaldoAperturaDia=resp.dataSaldoCompras;
+                me.cjtSaldoAperturaDia = resp.dataSaldoCompras;
                 me.isBusy = false;
                 me.loaded = true;
             }).catch((e) => {
-                me.AlertaMensaje("error", "Calcular Saldo Compras, Detalles: "+ e.response);
+                me.AlertaMensaje("error", "Calcular Saldo Compras, Detalles: " + e.response);
             });
         },
         actualizarCantidad(item, nuevaCantidad) {
             item.cantidad = nuevaCantidad;
         },
-        actualizarSubtotal(item,precio){
+        actualizarSubtotal(item, precio) {
             item.precioC = precio
-            item.subtotal = Math.ceil( item.precioC * item.cantidad)
+            item.subtotal = Math.ceil(item.precioC * item.cantidad)
         },
         onFiltered(filteredItems) {
             // Trigger pagination to update the number of buttons/pages due to filtering
@@ -683,7 +665,7 @@ export default {
             if (index >= 0 && index < this.itemsAgregado.length) {
                 this.itemsAgregado.splice(index, 1);
                 this.montoRecibido = 0
-                this.cambio=0
+                this.cambio = 0
             }
         },
         ControlaEliminar(item, index) {
@@ -725,11 +707,11 @@ export default {
                 doc.text(' Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
                 const currentDate = new Date(); // Obtiene la fecha actual
                 const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                const formattedDate = currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
+                const formattedDate = me.txtFechaCompra  //currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
 
                 // Configuración de la nota de venta
                 const notaDeCompra = {
-                    numero: (me.cjtReferencia==0)?me.txtNumero:me.cjtReferencia,
+                    numero: (me.cjtReferencia == 0) ? me.txtNumero : me.cjtReferencia,
                     fecha: formattedDate,
                     cliente: me.selectedProveedor.title,
                     direccion: '123 Calle Principal',
@@ -738,10 +720,10 @@ export default {
 
 
                 // Datos de los productos
-                const columns = ['Articulo', 'Cantidad','PrecioUnitario', 'SubTotal'];
+                const columns = ['Articulo', 'Cantidad', 'PrecioUnitario', 'SubTotal'];
                 const rows = Articulos.map((producto) => {
                     const PrecioCompra = parseFloat(producto.precioC);
-                    const subtotal =Math.ceil(parseFloat(PrecioCompra) * parseInt(producto.cantidad));
+                    const subtotal = Math.ceil(parseFloat(PrecioCompra) * parseInt(producto.cantidad));
 
                     return [
                         producto.title || '',
@@ -788,7 +770,7 @@ export default {
                 // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
                 const total = Articulos.reduce((acc, producto) => {
                     const subtotal = parseFloat(producto.precioC) * parseInt(producto.cantidad);
-                    return Math.ceil(  acc + subtotal);
+                    return Math.ceil(acc + subtotal);
                 }, 0);
                 doc.setFont('helvetica', 'neue');
                 doc.text(`Total Bs.:`, 145, doc.autoTable.previous.finalY + 10);
@@ -812,7 +794,7 @@ export default {
         validaOperacion(accion) {
             if (accion === "guardar") { this.AddShopping() }
             if (accion === "editar") { this.UpdateShopping() }
-            if (accion === "ver") { this.generatePDF(this.itemsAgregado)}
+            if (accion === "ver") { this.generatePDF(this.itemsAgregado) }
         },
 
         /** Este evento elimina Articulo del Carrito */

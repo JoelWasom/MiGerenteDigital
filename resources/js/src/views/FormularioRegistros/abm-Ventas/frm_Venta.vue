@@ -1,22 +1,43 @@
 <template>
     <section>
+
+        <b-modal ref="frmCliente" id="frmCliente" ok-title="Cerrar" ok-variant="danger" ok-only size="md" centered
+            title="Registro de Cliente" no-close-on-backdrop @ok="cbxCliente" @hidden="cerrarVentana">
+            <!-- Diseño del Formulario -->
+
+
+            <frm-cliente></frm-cliente>
+
+
+        </b-modal>
+
         <b-row>
+
+
             <b-col sm="12" md="3" xl="3">
                 <b-row>
                     <b-col>
                         <b-card border-variant="info">
 
                             <b-row>
-                                <b-col sm="12" md="12" xl="12">
+                                <b-col sm="10" md="10" xl="10" lg="10">
 
                                     <b-form-group>
                                         <label for="tipoPago">Cliente</label>
-
                                         <v-select v-model="selectedCliente" :options="gntCliente" label="title"
                                             placeholder="Seleccionar Cliente" class="select-size-lg" :max-options="3">
 
                                         </v-select>
                                     </b-form-group>
+                                </b-col>
+                                <b-col sm="2" md="2" xl="2" lg="2">
+                                    <b-form-group>
+                                        <b-button v-ripple.400="'rgba(40, 199, 111, 0.15)'" variant="flat-success"
+                                            v-b-modal.frmCliente class="btn-icon">
+                                            <feather-icon icon="UserPlusIcon" />
+                                        </b-button>
+                                    </b-form-group>
+
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -86,7 +107,7 @@
                     <b-col>
                         <b-card border-variant="info">
                             <b-row>
-                                <b-col >
+                                <b-col>
                                     <b-form-group>
                                         <label class="d-inline d-lg-flex">Buscar Producto</label>
                                         <v-select ref="selectedProductos" v-model="selectedProductos"
@@ -113,19 +134,9 @@
                             <b-row>
                                 <b-col>
                                     <!-- Tabla --> <!-- Listado -->
-                                    <b-table id="tabla-lista-retrasos" 
-                                    :items="itemsAgregado" 
-                                    :fields="fieldsAgregado"
-                                    :filter="filter" 
-                                    @filtered="onFiltered" 
-                                    hover 
-                                    :busy="isBusy" 
-                                    :bordered="true"
-                                    outlined 
-                                    stacked="sm"  
-                                    small
-                                    :style="{ fontSize: fontSize }"
-                                   >
+                                    <b-table id="tabla-lista-retrasos" :items="itemsAgregado" :fields="fieldsAgregado"
+                                        :filter="filter" @filtered="onFiltered" hover :busy="isBusy" :bordered="true"
+                                        outlined stacked="sm" small :style="{ fontSize: fontSize }">
 
                                         <template #cell(cantidad)="row">
                                             <b-form-input v-model="row.value" type="number" min="1"
@@ -178,7 +189,7 @@
                             <span class="align-middle">{{ $store.state.app.botonTexto }} </span>
                         </b-button>
                     </b-col>
-                    <button @click="generatePDF">Generar PDF</button>
+                
                 </b-row>
             </b-col>
         </b-row>
@@ -232,6 +243,7 @@ import flatPickr from 'vue-flatpickr-component'
 
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import FrmCliente from '../abm-Cliente/frmCliente.vue';
 export default {
     components: {
         VBTooltip,
@@ -270,7 +282,8 @@ export default {
         BFormDatalist,
         BBadge,
         BSpinner,
-        BFormSpinbutton
+        BFormSpinbutton,
+        FrmCliente
     },
     data() {
         return {
@@ -332,10 +345,10 @@ export default {
         this.cbxCliente()
 
         const movil = window.innerWidth;
-            if (movil <= 576) {
+        if (movil <= 576) {
             // Dispositivo móvil pequeño
             this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
-            }
+        }
 
     },
     computed: {
@@ -375,7 +388,7 @@ export default {
                 doc.text('Nit  : ' + me.$store.state.app.NitEmpresa, 40, 30);
                 const currentDate = new Date(); // Obtiene la fecha actual
 
-                
+
 
                 const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
                 const formattedDate = me.txtFechaVenta// currentDate.toLocaleDateString('es-ES', options); // Formatea la fecha como "10/11/2023"
@@ -467,7 +480,9 @@ export default {
         }
         ,
 
-
+        cerrarVentana(){
+            this.cbxCliente()
+        },
         UsuarioAlerta(variant, msj) {
             let title, confirmButtonClass, showClass;
 

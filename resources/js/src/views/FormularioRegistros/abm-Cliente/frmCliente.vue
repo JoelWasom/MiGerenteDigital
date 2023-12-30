@@ -1,9 +1,9 @@
 <template>
     <section>
-        <b-overlay  :show="showOverlay" rounded="sm" variant="transparent" :opacity="opacity" :blur="blur">
+        <b-overlay :show="showOverlay" rounded="sm" variant="transparent" :opacity="opacity" :blur="blur">
             <b-card border-variant="info">
                 <b-row>
-                    <b-col md="6">
+                    <b-col md="12">
                         <b-form-group>
                             <label class="d-inline d-lg-flex">Nombre del Cliente</label>
                             <b-form-input id="txt_cliNombre" v-model="cliNombre" :state="cliNombre.length ? true : false"
@@ -23,9 +23,12 @@
                                 required />
                         </b-form-group>
                         <b-form-group>
-                            <label class="d-inline d-lg-flex">Dirección</label>
-                            <b-form-input id="txt_cliDireccion" v-model="cliDireccion"
-                                :state="cliDireccion.length ? true : false" required />
+                            <label style="font-size: 1em" class="d-inline d-lg-flex">Dirección</label>
+                            <b-form-textarea :state="cliDireccion.length ? true : false" v-model="cliDireccion" required
+                                rows="1" class="form-textarea" @keyup.enter="hola" />
+                            <b-badge :variant="cliDireccion.length ? 'success' : 'danger'">
+                                {{ cliDireccion.length + "/" + 200 }}
+                            </b-badge>
                         </b-form-group>
                         <b-form-group>
                             <label class="d-inline d-lg-flex">Razon Social</label>
@@ -142,7 +145,7 @@ export default {
         return {
             opacity: "0.85",
             blur: "0.5rem",
-            showOverlay:false,
+            showOverlay: false,
             isBusy: false,
             filter: "",
             stickyHeader: true,
@@ -239,7 +242,7 @@ export default {
 
             } catch (error) {
                 this.showOverlay = false;
-                this.UsuarioAlerta("error",  error.response.data.error);
+                this.UsuarioAlerta("error", error.response.data.error);
             }
         },
         modificar() {

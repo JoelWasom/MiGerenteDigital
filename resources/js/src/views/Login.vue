@@ -256,22 +256,7 @@ export default {
           alert(e)
         });
     },
-    makeToast(variant, user) {
-      let me = this;
-      if (variant === "success") {
-        this.$bvToast.toast("Bienvenido " + user, {
-          title: `Sistema de Reportes de Recursos Humanos`,
-          variant,
-          solid: true,
-        });
-      } else {
-        this.$bvToast.toast("Sin Autorizaciòn ", {
-          title: `Sistema de Reportes de Recursos Humanos`,
-          variant,
-          solid: true,
-        });
-      }
-    },
+ 
 
     habilitaMenu() {
       let me = this;

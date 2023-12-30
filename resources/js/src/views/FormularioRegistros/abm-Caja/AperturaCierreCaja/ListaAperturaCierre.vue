@@ -43,13 +43,7 @@
                             <b-table id="tabla-lista-apertura" :items="items" :fields="fields" :filter="filter"
                                 @filtered="onFiltered" hover responsive="sm" :busy="isBusy" outlined
                                 :sticky-header="stickyHeader">
-                                <!-- <template #cell(artCantidad)="data">
-                                    <b-badge pill :variant="data.item.artCantMin">
-                                        <div class="custom-badge d-flex align-items-center">
-                                            <span>{{ data.item.artCantidad }}</span>
-                                        </div>
-                                    </b-badge>
-                                </template> -->
+                         
                                 <template #cell(Acción)="row">
                                     <b-row>
                                         <b-col>

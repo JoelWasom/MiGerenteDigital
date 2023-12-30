@@ -225,12 +225,12 @@ class AuthController extends Controller
                                 INNER JOIN rol as r on r.idrol=a.idrol
                                 INNER JOIN submenu as sub on  a.id_sub_menu=sub.id_submenu
                                 INNER JOIN menus as m on m.id=sub.id_menu_padre  
-                                WHERE r.idrol=  1 AND a.checked=1 ORDER BY m.orden ASC");
+                                WHERE r.idrol=  $idperfil and  a.checked=1 ORDER BY m.orden ASC");
       DB::commit();
       return response()->json($query_c, 200);
     } catch (\Exception $e) {
       DB::rollBack();
-      return response()->json(['Mensaje' => 'error']);
+      return response()->json(['Mensaje' => 'error'.$e->getMessage()],404);
     }
   }
 

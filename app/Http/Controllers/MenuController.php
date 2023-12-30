@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
+
 class MenuController extends Controller
 {
     /**
@@ -14,19 +15,24 @@ class MenuController extends Controller
      */
     public function ListaRol()
     {
-        $consulta= "SELECT  * FROM  rol";
-        $query=DB::select($consulta);
-        return response()->json($query,200);
+        // Escribe tu consulta SQL
+        $consulta = "SELECT * FROM rol";
+
+        // Ejecuta la consulta usando la fachada DB
+        $query = DB::select($consulta);
+
+        // Retorna la respuesta en formato JSON
+        return response()->json($query, 200);
     }
 
     public function GuardarPerfil(Request $request)
     {
-        $perfil=$request->perfil;
+        $perfil = $request->perfil;
         //INSERT INTO `perfil` (`idperfil`, `nombre_perfil`) VALUES (NULL, 'REPORTE TEST 2');
-        $consulta= "INSERT INTO perfil (nombre_perfil) VALUES ('$perfil')";
-        
-        $query=DB::select($consulta);
-        return response()->json(['Mensaje'=>'Exito'],200);
+        $consulta = "INSERT INTO perfil (nombre_perfil) VALUES ('$perfil')";
+
+        $query = DB::select($consulta);
+        return response()->json(['Mensaje' => 'Exito'], 200);
     }
 
     /**

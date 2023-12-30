@@ -8,14 +8,7 @@
                 <!-- Diseño del Formulario -->
                 <Frm_Venta></Frm_Venta>
             </b-modal>
-            <b-modal ref="frm-nota" id="frm-nota" ok-title="Cerrar" ok-variant="danger" ok-only size="xl" centered
-                title="Registro de Venta" no-close-on-backdrop @ok="obtenerVentasRealizadas">
-                <!-- Diseño del Formulario -->
-                <div>
-                    <frm-nota-venta></frm-nota-venta>
-                </div>
-
-            </b-modal>
+      
         </div>
         <b-row>
             <b-col md="9">
@@ -37,7 +30,7 @@
                                 </b-col>
                             </b-row>
                             <b-row>
-                                <b-col sm="12" md="4" xl="6" lg="6" class="mb-1">
+                                <b-col  sm="12" md="4" xl="6" lg="6" class="mb-1">
                                     <!-- Boton Modal -->
                                     <b-button v-ripple.400="'rgba(113, 102, 240, 0.15)'" v-b-modal.frm-ventas
                                         variant="success" @click="clickAccion('', 'guardar')"
