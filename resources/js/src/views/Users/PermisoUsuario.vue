@@ -31,7 +31,7 @@
                       <template #cell(cheked)="data">
                         <b-form-checkbox :checked="data.item.checked" v-model="data.item.checked"
                           @change="ModifiarPerfil(data.item)"
-                          :class="{ 'custom-control-success': data.item.checked, 'custom-control-danger': !data.item.checked }">
+                     >
                         </b-form-checkbox>
 
                       </template>

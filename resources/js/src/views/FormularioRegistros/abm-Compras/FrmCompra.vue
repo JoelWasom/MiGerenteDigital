@@ -31,7 +31,7 @@
                     <b-col>
                         <b-card border-variant="info">
                             <b-row>
-                                <b-col sm="10" md="10" xl="10">
+                                 <b-col sm="10" md="10" xl="10">
 
                                     <b-form-group>
                                         <label for="tipoPago">Proveedor</label>

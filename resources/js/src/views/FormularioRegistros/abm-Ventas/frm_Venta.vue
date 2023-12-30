@@ -113,7 +113,7 @@
                                         <v-select ref="selectedProductos" v-model="selectedProductos"
                                             :options="booksProductos" label="title" placeholder="Seleccionar"
                                             class="select-size-lg" :max-options="3" @input="cargarProducto()">
-                                            <template #option="{ title, icon, precioV, cantidad }">
+                                            <template #option="{ title, icon, precioV, cantidad ,marca}">
 
                                                 <div class="d-flex align-items-center">
                                                     <div class="product-image-container">
@@ -124,6 +124,7 @@
                                                         <strong>{{ title }}</strong>
                                                         <div class="text-secondary ">Precio: {{ precioV }}</div>
                                                         <div class="text-secondary ">Stock: {{ cantidad }}</div>
+                                                        <div class="text-secondary">Marca:{{ marca }}</div>
                                                     </div>
                                                 </div>
                                             </template>
@@ -570,7 +571,8 @@ export default {
                             title: resp[i].artNombre,
                             icon: resp[i].artFoto,
                             precioV: resp[i].artPrecioVenta,
-                            cantidad: resp[i].artCantidad
+                            cantidad: resp[i].artCantidad,
+                            marca: resp[i].marNombre
                         });
                     }
                     me.booksProductos = lista;
