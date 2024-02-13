@@ -23,7 +23,7 @@
                             </b-button>
                         </b-col>
 
-                    
+
                         <b-col sm="4" md="4" xl="4" lg="4">
                             <b-form-group label-for="filter-input">
                                 <b-input-group>
@@ -43,7 +43,7 @@
                             <b-table id="tabla-lista-apertura" :items="items" :fields="fields" :filter="filter"
                                 @filtered="onFiltered" hover responsive="sm" :busy="isBusy" outlined
                                 :sticky-header="stickyHeader">
-                         
+
                                 <template #cell(Acción)="row">
                                     <b-row>
                                         <b-col>
@@ -76,8 +76,7 @@
                                     <b-form-checkbox :checked="data.item.checked" v-model="data.item.checked"
                                         @change="clickAccion(data.item, ('cierre'))"
                                         :class="{ 'custom-control-success': data.item.checked, 'custom-control-danger': !data.item.checked }"
-                                        :disabled="data.item.checked"
-                                        >
+                                        :disabled="data.item.checked">
                                     </b-form-checkbox>
                                 </template>
                                 <template #table-busy>
@@ -187,7 +186,7 @@ export default {
                 // Transition name
                 name: "flip-list",
             },
-            confirmCheked:false,
+            confirmCheked: false,
             mesReporte: "",
             shows: true,
             isBusy: false,
@@ -419,7 +418,7 @@ export default {
                 cancelButtonText: 'Cancelar',
                 customClass: {
                     confirmButton: 'btn btn-outline-warning',
-                    cancelButton:  'btn btn-outline-danger ml-1',
+                    cancelButton: 'btn btn-outline-danger ml-1',
                 },
                 buttonsStyling: false,
             }).then(result => {
@@ -451,33 +450,40 @@ export default {
 
         async cerrarCajaFecha(item) {
             try {
-               
+
                 let me = this;
-                const fechaHoraCompleta = item["acFechaApertura"]
+                const fechaHoraCompleta = item["acFechaApertura"];
                 const fechaCompleta = new Date(fechaHoraCompleta);
-                const fechaSolo = fechaCompleta.toISOString().split('T')[0];
+
+                const dia = fechaCompleta.getDate();
+                const mes = fechaCompleta.getMonth() + 1; // Agregamos 1 porque los meses comienzan desde 0
+                const anio = fechaCompleta.getFullYear();
+
+                // Formatear la fecha en el formato deseado (YYYY-MM-DD)
+                const fechaSolo = `${anio}-${mes < 10 ? '0' : ''}${mes}-${dia < 10 ? '0' : ''}${dia}`;
                 me.showOverlay = true;
-             
+
                 const formData = new FormData();
                 me.items = [];
 
                 me.loaded = false;
                 me.isBusy = true;
-          
+
                 formData.append('cajId', item["id"]);
                 formData.append('userId', this.$store.state.app.UsuarioId);
                 formData.append("acFechaApertura", fechaSolo);
+
                 const response = await this.$http.post("cerrarCajaFecha", formData)
                 if (response.status === 201) {
-                    
+
                     this.showOverlay = false;
                     me.UsuarioAlerta("success", response.data.mensaje);
                     me.obtenerAperturasCaja()
                     me.isBusy = false;
                 }
-            
+
             } catch (error) {
-              
+
                 this.showOverlay = false;
                 this.UsuarioAlerta("error", error.response.data.error);
             }

@@ -11,7 +11,7 @@ use App\Http\Controllers\InvTxnController;
 use App\Http\Controllers\vnDetTxnController;
 use App\Http\Controllers\intArticuloController;
 use App\Http\Controllers\cjtTxnController;
-
+use Carbon\Carbon;
 class vntTxnController extends Controller
 {
     public function guardarVenta(Request $request)
@@ -66,6 +66,10 @@ class vntTxnController extends Controller
 
             $tablaVntTxn = 'vnttxn';
             // Insertar datos en la tabla vnttxn usando el controlador VntTxnController
+            $vntFechaCreacion = Carbon::parse($vntFechaCreacion); // Convierte la fecha existente a objeto Carbon
+            $vntFechaCreacion->addHours(now()->hour); // Agrega la hora actual
+            $vntFechaCreacion->addMinutes(now()->minute); // Agrega los minutos actuales
+
             $vntId = DB::table($tablaVntTxn)->insertGetId([
                 'cliId' => $cliId,
                 'userId' => $userId,

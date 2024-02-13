@@ -66,11 +66,13 @@
                             <b-row>
                                 <b-col sm="12" md="12" xl="12">
                                     <b-form-group>
-                                        <label for="tipoPago">Fecha de Compra:</label>
+                                        <label for="tipoPago">Fecha de Venta:</label>
                                         <!-- <b-form-datepicker v-model="txtFechaVenta"></b-form-datepicker> -->
-                                        <flat-pickr v-model="txtFechaVenta" class="form-control"
-                                            :config="{ enableTime: true, dateFormat: 'Y-m-d H:i' }" />
+                                        <flat-pickr v-model="txtFechaVenta" class="form-control" />
                                     </b-form-group>
+
+
+
                                 </b-col>
                             </b-row>
                             <b-row>
@@ -113,7 +115,7 @@
                                         <v-select ref="selectedProductos" v-model="selectedProductos"
                                             :options="booksProductos" label="title" placeholder="Seleccionar"
                                             class="select-size-lg" :max-options="3" @input="cargarProducto()">
-                                            <template #option="{ title, icon, precioV, cantidad ,marca}">
+                                            <template #option="{ title, icon, precioV, cantidad, marca }">
 
                                                 <div class="d-flex align-items-center">
                                                     <div class="product-image-container">
@@ -190,7 +192,7 @@
                             <span class="align-middle">{{ $store.state.app.botonTexto }} </span>
                         </b-button>
                     </b-col>
-                
+
                 </b-row>
             </b-col>
         </b-row>
@@ -334,6 +336,9 @@ export default {
             this.cambio = nuevoMonto - this.totalPagar
 
         }
+
+
+
     },
     directives: {
         "b-tooltip": VBTooltip,
@@ -356,14 +361,26 @@ export default {
 
         totalPagarCalculado() {
             return this.itemsAgregado.reduce((total, item) => {
-                if (item.descuento !== 0) {
-                    this.totalPagar = total + item.descuento * item.cantidad;
-                } else {
-                    this.totalPagar = total + item.precioV * item.cantidad;
-                }
+
+                this.totalPagar = total + item.descuento * item.cantidad;
                 this.montoRecibido = 0;
                 this.cambio = 0;
-                return this.totalPagar;
+                var parteDecimal = this.totalPagar % 1;
+
+                if (item.descuento !== 0) {
+
+                    this.totalPagar = total + item.descuento * item.cantidad;
+                    if (parteDecimal > 0.5) {
+                        return Math.ceil(this.totalPagar)
+                    } else {
+
+                        return this.totalPagar;
+                    }
+                } else {
+
+                    this.totalPagar = total + item.precioV * item.cantidad;
+                    return this.totalPagar;
+                }
             }, 0);
         },
     },
@@ -481,7 +498,7 @@ export default {
         }
         ,
 
-        cerrarVentana(){
+        cerrarVentana() {
             this.cbxCliente()
         },
         UsuarioAlerta(variant, msj) {
@@ -757,7 +774,18 @@ export default {
         },
         actualizarCantidad(item, nuevaCantidad) {
             item.cantidad = nuevaCantidad;
+            const res = item.precioC * item.cantidad
+            var parteDecimal = res % 1
+            if(parteDecimal >0.5){
 
+                item.subtotal= Math.ceil(res);
+            
+            }else 
+            
+            {
+                item.subtotal = res 
+                return item.subtotal
+            }
         },
 
 

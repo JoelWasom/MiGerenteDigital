@@ -17,13 +17,13 @@
                         <b-card-body>
                             <b-row>
                                 <b-col>
-                                    <b-button-toolbar >
+                                    <b-button-toolbar>
                                         <b-button-group class="mr-2 mb-1">
                                             <b-button variant="flat-success"
                                                 href="https://pweb.impuestos.gob.bo/Autenticacion/index.xhtml"
                                                 target="_blank" v-ripple.400="'rgba(113, 102, 240, 0.15)'">
-                                               <feather-icon icon="GlobeIcon" />
-                                               <span class="align-middle">Facturación</span>
+                                                <feather-icon icon="GlobeIcon" />
+                                                <span class="align-middle">Facturación</span>
                                             </b-button>
                                         </b-button-group>
 
@@ -55,19 +55,9 @@
                             <b-row>
                                 <b-col>
                                     <!-- Tabla --> <!-- Listado -->
-                                    <b-table id="tabla-lista-compras" 
-                                    :items="items" 
-                                    :fields="fields" 
-                                    :filter="filter"
-                                    @filtered="onFiltered" 
-                                    hover 
-                                    :bordered="true" 
-                                    :busy="isBusy" 
-                                    outlined
-                                    stacked="sm"  
-                                    small
-                                    :style="{ fontSize: fontSize }"
-                                   >
+                                    <b-table id="tabla-lista-compras" :items="items" :fields="fields" :filter="filter"
+                                        @filtered="onFiltered" hover :bordered="true" :busy="isBusy" outlined stacked="sm"
+                                        small :style="{ fontSize: fontSize }">
                                         <template #cell(artCantidad)="data">
                                             <div class="d-flex align-items-center">
                                                 <b-form-input id="txtCantidad" placeholder="Cantidad" class="small-input"
@@ -126,7 +116,7 @@
                         compras Contado :{{ totalComprasSum }}
                     </b-card-body>
                 </b-card></b-col>
-                
+
         </b-row>
 
     </section>
@@ -177,44 +167,44 @@ import FrmCompra from "./FrmCompra.vue";
 
 export default {
     components: {
-    BButtonToolbar,
-    BButtonGroup,
-    VBTooltip,
-    vSelect,
-    BFormFile,
-    BFormValidFeedback,
-    BFormInvalidFeedback,
-    BOverlay,
-    BFormDatepicker,
-    BInputGroupAppend,
-    BInputGroup,
-    BRow,
-    BModal,
-    VBModal,
-    BTable,
-    BAvatar,
-    BCardTitle,
-    BCardBody,
-    BCardHeader,
-    BCard,
-    BDropdown,
-    BDropdownItem,
-    BButton,
-    BFormSelect,
-    BFormTextarea,
-    BCol,
-    BFormGroup,
-    BFormInput,
-    BFormCheckbox,
-    BForm,
-    BMedia,
-    BFormText,
-    BFormDatalist,
-    BBadge,
-    BSpinner,
+        BButtonToolbar,
+        BButtonGroup,
+        VBTooltip,
+        vSelect,
+        BFormFile,
+        BFormValidFeedback,
+        BFormInvalidFeedback,
+        BOverlay,
+        BFormDatepicker,
+        BInputGroupAppend,
+        BInputGroup,
+        BRow,
+        BModal,
+        VBModal,
+        BTable,
+        BAvatar,
+        BCardTitle,
+        BCardBody,
+        BCardHeader,
+        BCard,
+        BDropdown,
+        BDropdownItem,
+        BButton,
+        BFormSelect,
+        BFormTextarea,
+        BCol,
+        BFormGroup,
+        BFormInput,
+        BFormCheckbox,
+        BForm,
+        BMedia,
+        BFormText,
+        BFormDatalist,
+        BBadge,
+        BSpinner,
 
-    FrmCompra
-},
+        FrmCompra
+    },
     directives: {
         "b-tooltip": VBTooltip,
         Ripple,
@@ -224,6 +214,7 @@ export default {
             txtCantidad: 0,
             TipoAccion: null,
             stickyHeader: true,
+            fontSize: "",
             transProps: {
                 // Transition name
                 name: "flip-list",
@@ -272,9 +263,15 @@ export default {
         },
     },
     mounted() {
-        this.VerificarAperturaCaja()        
+        this.VerificarAperturaCaja()
         this.GetAllShopping()
         this.clickAccion('', "apertura")
+
+        const movil = window.innerWidth;
+        if (movil <= 576) {
+            // Dispositivo móvil pequeño
+            this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
+        }
     },
     methods: {
         clickAccion(item, accion) {

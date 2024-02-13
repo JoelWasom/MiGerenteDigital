@@ -3,10 +3,7 @@
         <b-modal ref="frmProveedor" id="frmProveedor" ok-title="Cerrar" ok-variant="danger" ok-only size="md" centered
             title="Registro de Cliente" no-close-on-backdrop @ok="cbxProveedor" @hidden="cerrarVentana">
             <!-- Diseño del Formulario -->
-
             <frm-proveedor></frm-proveedor>
-
-
         </b-modal>
 
         <b-row v-show="txtNumero != ''">
@@ -20,7 +17,8 @@
         <b-row v-show="txtNumero == ''">
             <b-col sm="12" md="12" xl="12">
                 <b-card border-variant="info">
-                    <h5>Monto disponible caja Gastos: <b style="font-size: x-large;">{{ cjtSaldoAperturaDia.toFixed(2) }}</b>
+                    <h5>Monto disponible caja Gastos: <b style="font-size: x-large;">{{ cjtSaldoAperturaDia.toFixed(2)
+                    }}</b>
                     </h5>
                 </b-card>
             </b-col>
@@ -31,7 +29,7 @@
                     <b-col>
                         <b-card border-variant="info">
                             <b-row>
-                                 <b-col sm="10" md="10" xl="10">
+                                <b-col sm="10" md="10" xl="10">
 
                                     <b-form-group>
                                         <label for="tipoPago">Proveedor</label>
@@ -108,7 +106,7 @@
                                         :filter="filter" @filtered="onFiltered" hover :busy="isBusy" :bordered="true"
                                         outlined stacked="sm" small :style="{ fontSize: fontSize }">
                                         <template #cell(precioC)="row">
-                                            <b-form-input v-model="row.value" type="number" min="0"
+                                            <b-form-input v-model="row.value" type="number" min="1"
                                                 @input="actualizarSubtotal(row.item, row.value)" ref="PrecioInput"
                                                 :state="row.value > 0 ? true : false"
                                                 v-b-tooltip.hover.top.right="row.value > 0 ? '' : 'Precio debe ser mayor a cero'"
@@ -123,9 +121,7 @@
                                                 :show="row.value === 0" :trigger="'hover focus'"
                                                 class="v-b-tooltip-dark text-center" />
                                         </template>
-                                        <template #cell(subtotal)="row">
-                                            {{ Math.ceil(parseFloat(row.item.precioC) * row.item.cantidad) }}
-                                        </template>
+
                                         <template #cell(Acción)="row">
                                             <b-button v-ripple.400="'rgba(255, 255, 255, 0.15)'" variant="flat-danger"
                                                 class="btn-icon rounded-circle"
@@ -268,6 +264,7 @@ export default {
             filter: "",
             stickyHeader: true,
             headVariant: "dark",
+            fontSize: "",
             booksProductos: [
             ],
             selectedProductos: {
@@ -302,30 +299,46 @@ export default {
         Ripple,
     },
 
-    mounted() {
-        this.cbxArticulo()
-        this.cbxFormaPago()
-        this.cbxProveedor()
+    created() {
+        this.sizeTablas()
 
-        const movil = window.innerWidth;
-        if (movil <= 576) {
-            // Dispositivo móvil pequeño
-            this.fontSize = 'xx-small'; // Tamaño de fuente pequeño
-        }
+
+    },
+
+
+    mounted() {
+        let me = this
+        me.cbxArticulo()
+        me.cbxFormaPago()
+        me.cbxProveedor()
+
+
         if (this.$store.state.app.TipoAccion === "editar" || this.$store.state.app.TipoAccion === "ver") {
             this.GetShoppingById()
         }
-        this.GetSaldoCajaActual()
+        me.GetSaldoCajaActual()
+
     },
     computed: {
+
+
+
         totalPagarCalculado() {
             return this.itemsAgregado.reduce((total, item) => {
-                this.totalPagar = total + Math.ceil(item.precioC * item.cantidad)
+
+                this.totalPagar = total + item.precioC * item.cantidad
                 this.montoRecibido = 0;
                 this.cambio = 0;
-                return this.totalPagar;
-            }, 0);
 
+                var parteDecimal = this.totalPagar % 1;
+                if (parteDecimal > 0.5) {
+                    return Math.ceil(this.totalPagar)
+                } else {
+                    return this.totalPagar
+                }
+
+
+            }, 0);
         },
     },
     methods: {
@@ -364,6 +377,7 @@ export default {
         },
 
         //eventos 
+
         cbxFormaPago() {
             let me = this;
             const axios = require("axios").default;
@@ -414,9 +428,7 @@ export default {
             });
         },
 
-
-
-        cerrarVentana(){
+        cerrarVentana() {
             this.cbxProveedor()
         },
         cbxProveedor() {
@@ -652,11 +664,45 @@ export default {
         },
         actualizarCantidad(item, nuevaCantidad) {
             item.cantidad = nuevaCantidad;
+            const resultadoMultiplicacion = item.precioC * item.cantidad;
+            var parteDecimal = resultadoMultiplicacion % 1;
+            if (parteDecimal > 0.5) {
+                item.subtotal = Math.ceil(resultadoMultiplicacion)
+                console.log("0.5->" + resultadoMultiplicacion)
+
+                return item.subtotal
+            } else {
+                item.subtotal = resultadoMultiplicacion
+                console.log(" menor a 0.5->" + resultadoMultiplicacion)
+                return item.subtotal;
+            }
+
+
         },
         actualizarSubtotal(item, precio) {
-            item.precioC = precio
-            item.subtotal = Math.ceil(item.precioC * item.cantidad)
+
+            item.precioC = precio;
+            const resultadoMultiplicacion = item.precioC * item.cantidad;
+            var parteDecimal = resultadoMultiplicacion % 1
+
+            if (parteDecimal > 0.5) {
+                item.subtotal = Math.ceil(resultadoMultiplicacion)
+                return item.subtotal
+            } else {
+                item.subtotal = resultadoMultiplicacion
+                return item.subtotal;
+            }
+
+
+
+
+
+
+
+
+
         },
+
         onFiltered(filteredItems) {
             // Trigger pagination to update the number of buttons/pages due to filtering
             this.totalRows = filteredItems.length;
@@ -723,13 +769,21 @@ export default {
                 const columns = ['Articulo', 'Cantidad', 'PrecioUnitario', 'SubTotal'];
                 const rows = Articulos.map((producto) => {
                     const PrecioCompra = parseFloat(producto.precioC);
-                    const subtotal = Math.ceil(parseFloat(PrecioCompra) * parseInt(producto.cantidad));
+                    const subtotal = PrecioCompra * producto.cantidad;
+                    const parteDecimal = subtotal % 1;
+                    var decimaSuperior = 0.0
+                    if (parteDecimal > 0.5) {
 
+                        decimaSuperior = Math.ceil(subtotal)
+                    } else {
+                        decimaSuperior = subtotal
+                    }
+                    debugger
                     return [
                         producto.title || '',
                         producto.cantidad || 0,
                         PrecioCompra.toFixed(2), // Mostrar el precio original en la columna 'Precio'
-                        subtotal.toFixed(2),
+                        decimaSuperior,
                     ];
                 });
 
@@ -770,7 +824,7 @@ export default {
                 // const total = Articulo.reduce((acc, producto) => acc + parseFloat(producto.precioV) * parseInt(producto.cantidad), 0);
                 const total = Articulos.reduce((acc, producto) => {
                     const subtotal = parseFloat(producto.precioC) * parseInt(producto.cantidad);
-                    return Math.ceil(acc + subtotal);
+                    return Math.round(acc + subtotal);
                 }, 0);
                 doc.setFont('helvetica', 'neue');
                 doc.text(`Total Bs.:`, 145, doc.autoTable.previous.finalY + 10);
@@ -803,6 +857,26 @@ export default {
                 this.ControlaEliminar(item, index)
             }
         },
+
+        /**par validar el tamaño de las tablas en cada dispositivi */
+        sizeTablas() {
+            const anchoVentana = window.innerWidth;
+
+            if (anchoVentana <= 576) {
+                // Dispositivo móvil pequeño
+                this.fontSize = 'x-small';
+            } else if (anchoVentana <= 768) {
+                // Dispositivo móvil o tableta
+                this.fontSize = 'small';
+            } else if (anchoVentana <= 992) {
+                // Tableta o dispositivo de tamaño medio
+                this.fontSize = 'medium';
+            } else {
+                // Pantalla de escritorio
+                this.fontSize = 'large';
+            }
+        },
+
     }
 }
 </script>

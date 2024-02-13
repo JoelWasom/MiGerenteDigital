@@ -233,9 +233,9 @@ class cjACController extends Controller
             // Retornar una respuesta de éxito
             return response()->json(['mensaje' => 'Monto de Cierre :' .  $montoCierre], 201);
         } catch (QueryException $e) {
-            return response()->json(['error' => 'Error al crear el cliente: ' . $e->getMessage()], 500);
+            return response()->json(['error' => 'Error al cerrar caja: ' . $e->getMessage()], 500);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['error' => 'Error de validación: ' . $e->getMessage()], 422);
+            return response()->json(['error_1' => 'Error de validación: ' . $e->getMessage()], 422);
         }
     }
 
